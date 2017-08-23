@@ -1,0 +1,2 @@
+
+//! Storing static path mappings

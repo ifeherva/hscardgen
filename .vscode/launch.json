@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "cardgenerator-lldb-test",
+            "program": "target/debug/deps/hscardgen-776b48fe61d0880b",
+            "cwd": "${workspaceRoot}"
+        }
+    ]
+}

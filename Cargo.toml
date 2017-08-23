@@ -1,0 +1,14 @@
+[package]
+name = "hscardgen"
+version = "0.1.0"
+authors = ["Istvan Fehervari <gooksl@gmail.com>"]
+
+[lib]
+name = "hscardgen"
+#crate-type = ["dylib"]
+
+[dependencies]
+unitypack = { path = "../UnityPackRust/UnityPack" }
+sfml = "0.12.0"
+glob = "0.2.11" # list file system with pattern
+heapsize = "0.4.1" # get heapsize of objects (debug)
