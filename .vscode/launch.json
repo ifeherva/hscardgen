@@ -6,7 +6,10 @@
             "request": "launch",
             "name": "cardgenerator-lldb-test",
             "program": "target/debug/deps/hscardgen-776b48fe61d0880b",
-            "cwd": "${workspaceRoot}"
+            "cwd": "${workspaceRoot}",
+            "args": [
+                "--nocapture"
+            ]
         }
     ]
 }

@@ -1,7 +1,8 @@
-
+extern crate rayon;
 extern crate unitypack;
 extern crate glob;
 
+pub mod error;
 pub mod generator;
 mod assets;
 

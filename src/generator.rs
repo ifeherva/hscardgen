@@ -1,6 +1,6 @@
 
 use assets::Assets;
-use unitypack::error::Result;
+use error::Result;
 
 pub struct Generator {
     assets: Assets,
