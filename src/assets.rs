@@ -17,6 +17,18 @@ struct UnpackDef {
     pub object_type: String,
 }
 
+impl UnpackDef {
+    fn new(path: &str, object_type: &str) -> Self {
+        UnpackDef {
+            file_paths: glob(path)
+                .unwrap()
+                .map(|x| x.unwrap().to_str().unwrap().to_string())
+                .collect::<Vec<String>>(),
+            object_type: object_type.to_string(),
+        }
+    }
+}
+
 fn object_hash(unpackdef: &UnpackDef) -> HashMap<String, String> {
     unpackdef
         .file_paths
@@ -92,22 +104,10 @@ impl Assets {
     fn catalog(assets_path: &str) -> Result<HashMap<String, String>> {
 
         // files containing textures
-        let textures = UnpackDef {
-            file_paths: glob(&[assets_path, "/*texture*.unity3d"].join(""))
-                .unwrap()
-                .map(|x| x.unwrap().to_str().unwrap().to_string())
-                .collect::<Vec<String>>(),
-            object_type: "Texture2D".to_string(),
-        };
+        let textures = UnpackDef::new(&[assets_path, "/*texture*.unity3d"].join(""), "Texture2D");
 
         // files containing text data, e.g. cardsdb
-        let textassets = UnpackDef {
-            file_paths: glob(&[assets_path, "/*xml*.unity3d"].join(""))
-                .unwrap()
-                .map(|x| x.unwrap().to_str().unwrap().to_string())
-                .collect::<Vec<String>>(),
-            object_type: "TextAsset".to_string(),
-        };
+        let textassets = UnpackDef::new(&[assets_path, "/*xml*.unity3d"].join(""), "TextAsset");
 
         let asset_src = vec![textassets, textures];
 
