@@ -7,12 +7,10 @@ use error::{Result, Error};
 use std::collections::HashMap;
 use glob::glob;
 use rayon::prelude::*;
-use cards::CardDefs;
 
 /// Stores graphic elements to construct cards
 pub struct Assets {
     texture_cache: HashMap<String, String>, // object_name -> file|asset
-    card_defs: CardDefs,
 }
 
 struct UnpackDef {
@@ -58,7 +56,7 @@ fn object_hash(unpackdef: &UnpackDef) -> HashMap<String, String> {
                     let objects = &asset.objects;
 
                     for (id, ref obj) in objects.iter() {
-                        println!("{}",obj.type_name);
+                        //println!("{}",obj.type_name);
                         if obj.type_name == unpackdef.object_type {
                             let engine_object =
                                 obj.read_signature(asset, &mut asset_bundle.signature)
@@ -106,7 +104,6 @@ impl Assets {
 
         Ok(Assets {
             texture_cache: catalog,
-            card_defs: CardDefs::new()?,
         })
     }
 

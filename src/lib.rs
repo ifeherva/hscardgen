@@ -16,6 +16,6 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let generator = Generator::new("/Applications/Hearthstone/Data/OSX/");
+        let generator = Generator::new("/Applications/Hearthstone/Data/OSX/").unwrap();
     }
 }
