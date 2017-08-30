@@ -6,11 +6,11 @@ use std::fs::File;
 use std::path::Path;
 
 static CARDDEF_URL: &'static str = "https://raw.githubusercontent.com/HearthSim/hsdata/master/CardDefs.xml";
-static CARDDEF_PATH: &'static str = "/res/CardDefs.xml";
+static CARDDEF_PATH: &'static str = "./res/CardDefs.xml";
 
 fn main() {
     // Download card definitons if file does not exist
-    if Path::new(CARDDEF_PATH).exists() {
+    if !Path::new(CARDDEF_PATH).exists() {
         let mut dst = Vec::new();
         let mut easy = Easy::new();
         easy.url(CARDDEF_URL).unwrap();

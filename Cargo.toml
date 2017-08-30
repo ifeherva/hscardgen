@@ -2,6 +2,7 @@
 name = "hscardgen"
 version = "0.1.0"
 authors = ["Istvan Fehervari <gooksl@gmail.com>"]
+build = "build.rs"
 
 [lib]
 name = "hscardgen"
@@ -11,7 +12,7 @@ name = "hscardgen"
 curl = "0.4.8" # downloading CardDefs.xml
 
 [dependencies]
-unitypack = { path = "../UnityPackRust/UnityPack" }
+unitypack = { git = "https://github.com/ifeherva/UnityPackRust" }
 sfml = "0.12.0" # image processing lib
 glob = "0.2.11" # list file system with pattern
 heapsize = "0.4.1" # get heapsize of objects (debug)
