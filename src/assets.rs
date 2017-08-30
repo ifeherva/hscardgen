@@ -2,14 +2,17 @@ use unitypack::assetbundle::AssetBundle;
 use unitypack::object::ObjectValue;
 use unitypack::engine::texture::IntoTexture2D;
 use unitypack::engine::text::IntoTextAsset;
+use unitypack::engine::EngineObject;
 use error::{Result, Error};
 use std::collections::HashMap;
 use glob::glob;
 use rayon::prelude::*;
+use cards::CardDefs;
 
 /// Stores graphic elements to construct cards
 pub struct Assets {
-    cache: HashMap<String, String>, // object_name -> file|asset
+    texture_cache: HashMap<String, String>, // object_name -> file|asset
+    card_defs: CardDefs,
 }
 
 struct UnpackDef {
@@ -55,11 +58,11 @@ fn object_hash(unpackdef: &UnpackDef) -> HashMap<String, String> {
                     let objects = &asset.objects;
 
                     for (id, ref obj) in objects.iter() {
+                        println!("{}",obj.type_name);
                         if obj.type_name == unpackdef.object_type {
                             let engine_object =
                                 obj.read_signature(asset, &mut asset_bundle.signature)
                                     .unwrap();
-
                             if obj.type_name == "Texture2D" {
                                 let texture = match engine_object {
                                     ObjectValue::EngineObject(engine_object) => {
@@ -69,8 +72,8 @@ fn object_hash(unpackdef: &UnpackDef) -> HashMap<String, String> {
                                         panic!("Invalid engine object: not Texture2D type");
                                     }
                                 };
-                                println!("{} - {}|{}", texture.name.clone(), asset_path, id);
-                                map.insert(texture.name, format!("{}|{}", asset_path, id));
+                                //println!("{} - {}|{}|{}", texture.name.clone(), asset_path, i, id);
+                                map.insert(texture.name, format!("{}|{}|{}", asset_path, i, id));
                             } else if obj.type_name == "TextAsset" {
                                 let text = match engine_object {
                                     ObjectValue::EngineObject(engine_object) => {
@@ -80,8 +83,8 @@ fn object_hash(unpackdef: &UnpackDef) -> HashMap<String, String> {
                                         panic!("Invalid engine object: not TextAsset type");
                                     }
                                 };
-                                println!("{} - {}|{}", text.object.name.clone(), asset_path, id);
-                                map.insert(text.object.name, format!("{}|{}", asset_path, id));
+                                //println!("{} - {}|{}|{}", text.object.name.clone(), asset_path, i, id);
+                                map.insert(text.object.name, format!("{}|{}|{}", asset_path, i, id));
                             }
                         }
                     }
@@ -98,7 +101,39 @@ fn object_hash(unpackdef: &UnpackDef) -> HashMap<String, String> {
 
 impl Assets {
     pub fn new(assets_path: &str) -> Result<Self> {
-        Ok(Assets { cache: Assets::catalog(assets_path)? })
+        // generate asset catalog
+        let catalog = Assets::catalog(assets_path)?;
+
+        Ok(Assets {
+            texture_cache: catalog,
+            card_defs: CardDefs::new()?,
+        })
+    }
+
+    fn catalog_get(catalog: &HashMap<String, String>, key: &str) -> Result<EngineObject> {
+
+        let path = match catalog.get(key) {
+            Some(p) => p,
+            None => {
+                return Err(Error::ItemNotFoundError);
+            }
+        };
+
+        let elems: Vec<&str> = path.split("|").collect();
+        let file_path = elems[0];
+        let asset_num = elems[1].parse::<usize>().unwrap();
+        let object_id = elems[2].parse::<i64>().unwrap();
+        let mut asset_bundle = AssetBundle::load_from_file(file_path)?;
+        asset_bundle.resolve_asset(asset_num)?;
+        let asset = &mut asset_bundle.assets[asset_num];
+
+        match asset.objects[&object_id].read_signature(
+            asset,
+            &mut asset_bundle.signature,
+        )? {
+            ObjectValue::EngineObject(engine_object) => Ok(engine_object),
+            _ => Err(Error::ObjectTypeError),
+        }
     }
 
     fn catalog(assets_path: &str) -> Result<HashMap<String, String>> {
@@ -106,10 +141,7 @@ impl Assets {
         // files containing textures
         let textures = UnpackDef::new(&[assets_path, "/*texture*.unity3d"].join(""), "Texture2D");
 
-        // files containing text data, e.g. cardsdb
-        let textassets = UnpackDef::new(&[assets_path, "/*xml*.unity3d"].join(""), "TextAsset");
-
-        let asset_src = vec![textassets, textures];
+        let asset_src = vec![textures];
 
         let res = asset_src
             .par_iter()

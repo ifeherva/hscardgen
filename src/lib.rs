@@ -1,10 +1,13 @@
 extern crate rayon;
 extern crate unitypack;
 extern crate glob;
+#[macro_use] extern crate serde_derive;
+extern crate serde_xml_rs;
 
 pub mod error;
 pub mod generator;
 mod assets;
+mod cards;
 
 #[cfg(test)]
 mod tests {
