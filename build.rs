@@ -5,8 +5,10 @@ use std::io::prelude::*;
 use std::fs::File;
 use std::path::Path;
 
-static CARDDEF_URL: &'static str = "https://raw.githubusercontent.com/HearthSim/hsdata/master/CardDefs.xml";
-static CARDDEF_PATH: &'static str = "./res/CardDefs.xml";
+//static CARDDEF_URL: &'static str = "https://raw.githubusercontent.com/HearthSim/hsdata/master/CardDefs.xml";
+//static CARDDEF_PATH: &'static str = "./res/CardDefs.xml";
+static CARDDEF_URL: &'static str = "https://api.hearthstonejson.com/v1/20457/all/cards.json";
+static CARDDEF_PATH: &'static str = "./res/cards.json";
 
 fn main() {
     // Download card definitons if file does not exist

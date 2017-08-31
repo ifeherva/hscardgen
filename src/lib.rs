@@ -1,8 +1,11 @@
 extern crate rayon;
 extern crate unitypack;
 extern crate glob;
-#[macro_use] extern crate serde_derive;
-extern crate serde_xml_rs;
+extern crate serde;
+extern crate serde_json;
+
+#[macro_use]
+extern crate serde_derive;
 
 pub mod error;
 pub mod generator;
@@ -17,5 +20,6 @@ mod tests {
     #[test]
     fn it_works() {
         let generator = Generator::new("/Applications/Hearthstone/Data/OSX/").unwrap();
+        generator.generate_card("AT_001").unwrap();
     }
 }

@@ -1,23 +1,43 @@
 
 use assets::Assets;
-use cards::CardDefs;
-use error::Result;
+use cards::*;
+use error::{Result, Error};
 
 pub struct Generator {
     assets: Assets,
-    card_defs: CardDefs,
+    card_defs: CardDb,
 }
 
 impl Generator {
+    
     pub fn new(assets_path: &str) -> Result<Self> {
         let generator = Generator {
             assets: Assets::new(assets_path)?,
-            card_defs: CardDefs::new()?,
+            card_defs: CardDb::new()?,
         };
         
-        println!("build: {}, entities: {}",generator.card_defs.build, generator.card_defs.entities.len());
         Ok(generator)
     }
 
-    pub fn generate_card(&self, card_id: &str) {}
+    pub fn generate_card(&self, card_id: &str) -> Result<()> {
+        let card = match self.card_defs.cards.get(card_id){
+            Some(c) => c,
+            None => {
+                return Err(Error::CardNotFoundError);
+            },
+        };
+
+        /*let cardback = generate_cardback_key(&card.card_type, match &card.player_class {
+            &Some(ref pc) => pc,
+            &None => {
+                return Err(Error::InvalidCardError);
+            },
+        });*/
+
+        Ok(())
+    }
+}
+
+fn generate_cardback_key(cardtype: &CardType, player_class: &CardClass) {
+
 }

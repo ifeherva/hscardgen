@@ -1,15 +1,16 @@
-
 use std::result;
 use unitypack;
-use serde_xml_rs;
 use glob::GlobError;
+use serde_json;
 
 #[derive(Debug)]
 pub enum Error {
     UnityPackError(Box<unitypack::error::Error>),
     PathError(Box<GlobError>),
-    XmlError(Box<serde_xml_rs::Error>),
+    JsonError(Box<serde_json::Error>),
     ItemNotFoundError,
+    CardNotFoundError,
+    InvalidCardError,
     ObjectTypeError,
 }
 
@@ -19,9 +20,9 @@ impl From<unitypack::error::Error> for Error {
     }
 }
 
-impl From<serde_xml_rs::Error> for Error {
-    fn from(error: serde_xml_rs::Error) -> Error {
-        Error::XmlError(Box::new(error))
+impl From<serde_json::Error> for Error {
+    fn from(error: serde_json::Error) -> Error {
+        Error::JsonError(Box::new(error))
     }
 }
 

@@ -18,5 +18,5 @@ glob = "0.2.11" # list file system with pattern
 heapsize = "0.4.1" # get heapsize of objects (debug)
 rayon = "0.8.2" # parallel iterators
 serde = "1.0.11"
-serde-xml-rs = "0.2.1" # xml parser for card database
+serde_json = "1.0"
 serde_derive = "1.0.11"
