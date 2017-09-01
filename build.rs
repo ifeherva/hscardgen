@@ -16,6 +16,10 @@ static CARDDEF_PATH: &'static str = "./res/cards.json";
 static FRAME_SPELL_MAGE_URL: &'static str = "https://raw.githubusercontent.com/HearthSim/Sunwell/master/assets/frame-spell-mage.png";
 static FRAME_SPELL_MAGE_PATH: &'static str = "./res/frame-spell-mage.png";
 
+// assets
+static MANA_GEM_URL: &'static str = "https://raw.githubusercontent.com/HearthSim/Sunwell/master/assets/cost-mana.png";
+static MANA_GEM_PATH: &'static str = "./res/cost-mana.png";
+
 struct DlData {
     name: &'static str,
     url: &'static str,
@@ -24,20 +28,29 @@ struct DlData {
 
 impl DlData {
     fn new(name: &'static str, url: &'static str, destination: &'static str) -> Self {
-        DlData {name: name, url: url, destination: destination}
+        DlData {
+            name: name,
+            url: url,
+            destination: destination,
+        }
     }
 }
 
 fn main() {
-
     let file_list = vec![
         DlData::new("Card definitions", CARDDEF_URL, CARDDEF_PATH),
-        DlData::new("Mage spell frame", FRAME_SPELL_MAGE_URL, FRAME_SPELL_MAGE_PATH)
+        DlData::new("Mana gem", MANA_GEM_URL, MANA_GEM_PATH),
+        DlData::new(
+            "Mage spell frame",
+            FRAME_SPELL_MAGE_URL,
+            FRAME_SPELL_MAGE_PATH,
+        ),
     ];
 
-    file_list.par_iter().map(|x| { 
-        download_resource(x);
-    }).count();
+    file_list
+        .par_iter()
+        .map(|x| { download_resource(x); })
+        .count();
 }
 
 fn download_resource(res: &DlData) {
@@ -49,10 +62,12 @@ fn download_resource(res: &DlData) {
         easy.url(res.url).unwrap();
         {
             let mut transfer = easy.transfer();
-            transfer.write_function(|data| {
+            transfer
+                .write_function(|data| {
                     dst.extend_from_slice(data);
                     Ok(data.len())
-            }).unwrap();
+                })
+                .unwrap();
             transfer.perform().unwrap();
         }
 

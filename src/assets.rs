@@ -3,18 +3,18 @@ use unitypack::object::ObjectValue;
 use unitypack::engine::texture::IntoTexture2D;
 use unitypack::engine::text::IntoTextAsset;
 use unitypack::engine::EngineObject;
-use error::{Result, Error};
+use error::{Error, Result};
 use cards::*;
 use std::collections::HashMap;
 use glob::glob;
 use rayon::prelude::*;
-
-const FRAME_SPELL_MAGE: &'static [u8] = include_bytes!("../res/frame-spell-mage.png");
+use resources::*;
 
 /// Stores graphic elements to construct cards
 pub struct Assets {
     texture_cache: HashMap<String, String>, // object_name -> file|asset
     card_frames: HashMap<String, &'static [u8]>,
+    card_assets: HashMap<String, &'static [u8]>,
 }
 
 struct UnpackDef {
@@ -106,15 +106,16 @@ impl Assets {
         // generate asset catalog
         let catalog = Assets::catalog(assets_path)?;
         let card_frames = Assets::load_card_frames();
-        
+        let card_assets = Assets::load_card_assets();
+
         Ok(Assets {
             texture_cache: catalog,
             card_frames: card_frames,
+            card_assets: card_assets,
         })
     }
 
     fn catalog_get(catalog: &HashMap<String, String>, key: &str) -> Result<EngineObject> {
-
         let path = match catalog.get(key) {
             Some(p) => p,
             None => {
@@ -130,17 +131,13 @@ impl Assets {
         asset_bundle.resolve_asset(asset_num)?;
         let asset = &mut asset_bundle.assets[asset_num];
 
-        match asset.objects[&object_id].read_signature(
-            asset,
-            &mut asset_bundle.signature,
-        )? {
+        match asset.objects[&object_id].read_signature(asset, &mut asset_bundle.signature)? {
             ObjectValue::EngineObject(engine_object) => Ok(engine_object),
             _ => Err(Error::ObjectTypeError),
         }
     }
 
     fn catalog(assets_path: &str) -> Result<HashMap<String, String>> {
-
         // files containing textures
         let textures = UnpackDef::new(&[assets_path, "/*texture*.unity3d"].join(""), "Texture2D");
 
@@ -148,30 +145,61 @@ impl Assets {
 
         let res = asset_src
             .par_iter()
-            .fold(|| HashMap::new(), |mut map, unpackdef| {
-                map.extend(object_hash(&unpackdef));
-                map
-            })
-            .reduce(|| HashMap::new(), |mut a, b| {
-                a.extend(b);
-                a
-            });
+            .fold(
+                || HashMap::new(),
+                |mut map, unpackdef| {
+                    map.extend(object_hash(&unpackdef));
+                    map
+                },
+            )
+            .reduce(
+                || HashMap::new(),
+                |mut a, b| {
+                    a.extend(b);
+                    a
+                },
+            );
 
         Ok(res)
     }
 
     fn load_card_frames() -> HashMap<String, &'static [u8]> {
         let mut res = HashMap::new();
-        res.insert(format!("{:?}_{:?}",CardType::SPELL, CardClass::Mage),FRAME_SPELL_MAGE);
+        res.insert(
+            format!("{:?}_{:?}", CardType::SPELL, CardClass::Mage),
+            FRAME_SPELL_MAGE,
+        );
+        res
+    }
+
+    fn load_card_assets() -> HashMap<String, &'static [u8]> {
+        let mut res = HashMap::new();
+        res.insert(
+            format!("MANA_GEM"),
+            MANA_GEM,
+        );
         res
     }
 
     pub fn get_card_frame(&self, card_type: &CardType, card_class: &CardClass) -> Result<&[u8]> {
-        Ok(match self.card_frames.get(&format!("{:?}_{:?}",card_type, card_class)) {
+        Ok(match self.card_frames
+            .get(&format!("{:?}_{:?}", card_type, card_class))
+        {
             Some(k) => k,
             None => {
                 return Err(Error::AssetNotFoundError);
-            },
-        }) 
+            }
+        })
+    }
+
+    pub fn get_card_asset(&self, asset: &str) -> Result<&[u8]> {
+        Ok(match self.card_assets
+            .get(asset)
+        {
+            Some(k) => k,
+            None => {
+                return Err(Error::AssetNotFoundError);
+            }
+        })
     }
 }

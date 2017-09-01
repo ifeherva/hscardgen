@@ -1,8 +1,8 @@
-extern crate rayon;
-extern crate unitypack;
 extern crate glob;
+extern crate rayon;
 extern crate serde_json;
 extern crate sfml;
+extern crate unitypack;
 
 #[macro_use]
 extern crate serde_derive;
@@ -11,6 +11,7 @@ pub mod error;
 pub mod generator;
 mod assets;
 mod cards;
+mod resources;
 
 #[cfg(test)]
 mod tests {

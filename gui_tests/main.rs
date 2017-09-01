@@ -2,16 +2,21 @@ extern crate hscardgen;
 extern crate sfml;
 
 use hscardgen::generator::*;
-use sfml::graphics::{Color, RenderWindow, Sprite};
-use sfml::window::{VideoMode, Style, ContextSettings, Event};
+use sfml::graphics::{Color, RenderWindow, Sprite, Texture};
+use sfml::window::{ContextSettings, Event, Style, VideoMode};
 use sfml::graphics::RenderTarget;
 
 fn main() {
     let generator = Generator::new("/Applications/Hearthstone/Data/OSX/").unwrap();
-    let texture = generator.generate_card("AT_001").unwrap();
+    let texture = Texture::from_image(&generator.generate_card("AT_001").unwrap()).unwrap();
     let sprite = Sprite::with_texture(&texture);
 
-    let mut window = RenderWindow::new(VideoMode::new(800,1200,32), "Test window", Style::default(), &ContextSettings::default()).unwrap();
+    let mut window = RenderWindow::new(
+        VideoMode::new(800, 1200, 32),
+        "AT_001",
+        Style::default(),
+        &ContextSettings::default(),
+    ).unwrap();
 
     while window.is_open() {
         // consume event queue
@@ -21,16 +26,14 @@ fn main() {
                     match event {
                         Event::Closed => {
                             window.close();
-                        },
-                        _ => {},
+                        }
+                        _ => {}
                     };
                     false
                 }
-                None => {
-                    false
-                }
+                None => false,
             }
-        }{}
+        } {}
 
         // Clear screen
         window.clear(&Color::white());
