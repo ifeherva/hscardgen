@@ -10,6 +10,7 @@ pub enum Error {
     JsonError(Box<serde_json::Error>),
     ItemNotFoundError,
     CardNotFoundError,
+    AssetNotFoundError,
     InvalidCardError,
     ObjectTypeError,
 }

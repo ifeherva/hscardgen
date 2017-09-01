@@ -1,7 +1,7 @@
-
 use assets::Assets;
 use cards::*;
 use error::{Result, Error};
+use sfml::graphics::{Texture, Image};
 
 pub struct Generator {
     assets: Assets,
@@ -19,7 +19,8 @@ impl Generator {
         Ok(generator)
     }
 
-    pub fn generate_card(&self, card_id: &str) -> Result<()> {
+    pub fn generate_card(&self, card_id: &str) -> Result<Texture> {
+        // obtain card data
         let card = match self.card_defs.cards.get(card_id){
             Some(c) => c,
             None => {
@@ -27,17 +28,23 @@ impl Generator {
             },
         };
 
-        /*let cardback = generate_cardback_key(&card.card_type, match &card.player_class {
-            &Some(ref pc) => pc,
-            &None => {
+        let ref card_type = match card.card_type {
+            Some(ref ctype) => ctype,
+            None => {
                 return Err(Error::InvalidCardError);
             },
-        });*/
+        };
 
-        Ok(())
+        let ref card_class = match card.card_class {
+            Some(ref class) => class,
+            None => {
+                return Err(Error::InvalidCardError);
+            },
+        };
+
+        let card_frame = self.assets.get_card_frame(card_type, card_class)?;
+        
+        let image = Image::from_memory(card_frame).unwrap();
+        Ok(Texture::from_image(&image).unwrap())
     }
-}
-
-fn generate_cardback_key(cardtype: &CardType, player_class: &CardClass) {
-
 }

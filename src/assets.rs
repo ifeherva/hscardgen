@@ -4,13 +4,17 @@ use unitypack::engine::texture::IntoTexture2D;
 use unitypack::engine::text::IntoTextAsset;
 use unitypack::engine::EngineObject;
 use error::{Result, Error};
+use cards::*;
 use std::collections::HashMap;
 use glob::glob;
 use rayon::prelude::*;
 
+const FRAME_SPELL_MAGE: &'static [u8] = include_bytes!("../res/frame-spell-mage.png");
+
 /// Stores graphic elements to construct cards
 pub struct Assets {
     texture_cache: HashMap<String, String>, // object_name -> file|asset
+    card_frames: HashMap<String, &'static [u8]>,
 }
 
 struct UnpackDef {
@@ -101,9 +105,11 @@ impl Assets {
     pub fn new(assets_path: &str) -> Result<Self> {
         // generate asset catalog
         let catalog = Assets::catalog(assets_path)?;
-
+        let card_frames = Assets::load_card_frames();
+        
         Ok(Assets {
             texture_cache: catalog,
+            card_frames: card_frames,
         })
     }
 
@@ -152,5 +158,20 @@ impl Assets {
             });
 
         Ok(res)
+    }
+
+    fn load_card_frames() -> HashMap<String, &'static [u8]> {
+        let mut res = HashMap::new();
+        res.insert(format!("{:?}_{:?}",CardType::SPELL, CardClass::Mage),FRAME_SPELL_MAGE);
+        res
+    }
+
+    pub fn get_card_frame(&self, card_type: &CardType, card_class: &CardClass) -> Result<&[u8]> {
+        Ok(match self.card_frames.get(&format!("{:?}_{:?}",card_type, card_class)) {
+            Some(k) => k,
+            None => {
+                return Err(Error::AssetNotFoundError);
+            },
+        }) 
     }
 }

@@ -1,8 +1,8 @@
 extern crate rayon;
 extern crate unitypack;
 extern crate glob;
-extern crate serde;
 extern crate serde_json;
+extern crate sfml;
 
 #[macro_use]
 extern crate serde_derive;

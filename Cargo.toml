@@ -8,8 +8,14 @@ build = "build.rs"
 name = "hscardgen"
 #crate-type = ["dylib"]
 
+[[test]]
+name = "gui_tests"
+path = "gui_tests/main.rs"
+harness = false
+
 [build-dependencies]
 curl = "0.4.8" # downloading CardDefs.xml
+rayon = "0.8.2" # parallel iterators
 
 [dependencies]
 unitypack = { git = "https://github.com/ifeherva/UnityPackRust" }
