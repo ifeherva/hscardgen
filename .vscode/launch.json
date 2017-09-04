@@ -5,7 +5,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "cardgenerator-lldb-test",
-            "program": "target/debug/deps/hscardgen-776b48fe61d0880b",
+            "program": "target/debug/deps/gui_tests-b299036322b22e77",
             "cwd": "${workspaceRoot}",
             "args": [
                 "--nocapture"
