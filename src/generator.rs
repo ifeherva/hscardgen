@@ -1,7 +1,13 @@
 use assets::Assets;
 use cards::*;
 use error::{Error, Result};
-use sfml::graphics::{Color, Image, RenderTarget, RenderTexture, Sprite, Texture, Transformable};
+use sfml::graphics::{text_style, Color, Font, Image, RenderTarget, RenderTexture, Sprite, Text,
+                     Texture, Transformable};
+
+const FONT_BELWE: &'static str = "Belwe";
+const FONT_BELWE_OUTLINE: &'static str = "Belwe_Outline";
+const FONT_BLIZZARDGLOBAL: &'static str = "BlizzardGlobal";
+const FONT_FRANKLINGOTHIC: &'static str = "FranklinGothic";
 
 pub struct Generator {
     assets: Assets,
@@ -27,6 +33,13 @@ impl Generator {
             }
         };
 
+        let unknown_str = "Unknown";
+
+        let card_name: &str = match &card.name {
+            &Some(ref name) => &name.en_us,
+            &None => &unknown_str,
+        };
+
         let ref card_type = match card.card_type {
             Some(ref ctype) => ctype,
             None => {
@@ -41,6 +54,8 @@ impl Generator {
             }
         };
 
+        let transparent_color = Color::rgba(0, 0, 0, 0);
+
         let card_frame =
             Image::from_memory(self.assets.get_card_frame(card_type, card_class)?).unwrap();
         let card_frame_texture = Texture::from_image(&card_frame).unwrap();
@@ -48,7 +63,7 @@ impl Generator {
         // we draw on this canvas
         let mut canvas =
             RenderTexture::new(card_frame.size().x, card_frame.size().y, false).unwrap();
-        canvas.clear(&Color::white());
+        canvas.clear(&transparent_color);
 
         // draw card frame
         canvas.draw(&Sprite::with_texture(&card_frame_texture));
@@ -59,6 +74,34 @@ impl Generator {
         let mut mana_gem_sprite = Sprite::with_texture(&mana_gem_texture);
         mana_gem_sprite.move2f(24f32, 75f32);
         canvas.draw(&mana_gem_sprite);
+
+        let belwe_raw = self.assets.get_font(FONT_BELWE)?;
+        let belwe = Font::from_memory(&belwe_raw.data).ok_or(Error::ObjectTypeError)?;
+        /*HsFont {
+                ascent: font.ascent,
+                character_padding: font.character_padding,
+                character_spacing: font.character_spacing,
+                font_size: font.font_size,
+                kerning: font.kerning,
+                line_spacing: font.line_spacing,
+                pixel_scale: font.pixel_scale,
+                font: Font::from_memory(&font.data).ok_or(Error::ObjectTypeError)?,
+        }*/
+
+        // draw mana cost
+        match card.cost {
+            Some(cost) => {
+                println!("pixel_scale: {} name: {}", belwe_raw.pixel_scale, card_name);
+                let mut mana_text = Text::new_init("1", &belwe, 160);
+                mana_text.set_style(text_style::BOLD);
+                mana_text.set_outline_color(&Color::black());
+                mana_text.set_outline_thickness(4f32);
+                mana_text.move2f(68f32, 39f32);
+                mana_text.scale2f(1f32 + belwe_raw.pixel_scale, 1f32 + belwe_raw.pixel_scale);
+                canvas.draw(&mana_text);
+            }
+            None => {}
+        };
 
         // render off screen
         canvas.display();

@@ -5,6 +5,7 @@ use unitypack::engine::text::IntoTextAsset;
 use unitypack::engine::font::IntoFontDef;
 use unitypack::engine::font::IntoFont;
 use unitypack::engine::EngineObject;
+use unitypack::engine::font;
 use sfml::graphics::Font;
 use error::{Error, Result};
 use cards::*;
@@ -18,7 +19,7 @@ pub struct Assets {
     texture_cache: HashMap<String, String>, // object_name -> file|asset
     card_frames: HashMap<String, &'static [u8]>,
     card_assets: HashMap<String, &'static [u8]>,
-    fonts: HashMap<String, HsFont>,
+    fonts: HashMap<String, font::Font>,
 }
 
 struct UnpackDef {
@@ -221,7 +222,7 @@ impl Assets {
         res
     }
 
-    fn load_fonts(assets_path: &str) -> Result<HashMap<String, HsFont>> {
+    fn load_fonts(assets_path: &str) -> Result<HashMap<String, font::Font>> {
         
         //let fonts = UnpackDef::new(&[assets_path, "/*font*.unity3d"].join(""), "FontDef");
         let shared = UnpackDef::new(&[assets_path, "/shared*.unity3d"].join(""), "Font");
@@ -232,7 +233,8 @@ impl Assets {
         for key in fonts.keys() {
             let engine_object = Assets::catalog_get(&fonts, key)?;
             let font = engine_object.to_font()?;
-            
+            res.insert(font.object.name.clone(), font);
+            /*
             res.insert(font.object.name.clone(), HsFont {
                 ascent: font.ascent,
                 character_padding: font.character_padding,
@@ -242,7 +244,7 @@ impl Assets {
                 line_spacing: font.line_spacing,
                 pixel_scale: font.pixel_scale,
                 font: Font::from_memory(&font.data).ok_or(Error::ObjectTypeError)?,
-            });
+            });*/
         }
 
         Ok(res)
@@ -268,5 +270,11 @@ impl Assets {
                 return Err(Error::AssetNotFoundError);
             }
         })
+    }
+
+    pub fn get_font(&self, font_name: &str) -> Result<&font::Font> {
+        let font = self.fonts.get(font_name).ok_or(Error::AssetNotFoundError)?;
+
+        Ok(font)
     }
 }

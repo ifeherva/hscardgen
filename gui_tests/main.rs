@@ -8,10 +8,13 @@ use sfml::graphics::RenderTarget;
 
 fn main() {
     let generator = Generator::new("/Applications/Hearthstone/Data/OSX/").unwrap();
-    let texture = Texture::from_image(&generator.generate_card("AT_001").unwrap()).unwrap();
-    let sprite = Sprite::with_texture(&texture);
+    let texture = Texture::from_image(&generator.generate_card("CS2_031").unwrap()).unwrap();
+    //let sprite = Sprite::with_texture(&texture);
 
-    let mut window = RenderWindow::new(
+    let image = texture.copy_to_image().unwrap();
+    image.save_to_file("/Users/istvanfe/Downloads/test.png");
+
+    /*let mut window = RenderWindow::new(
         VideoMode::new(800, 1200, 32),
         "AT_001",
         Style::default(),
@@ -42,5 +45,5 @@ fn main() {
 
         // Update the window
         window.display();
-    }
+    }*/
 }
