@@ -2,7 +2,10 @@ use unitypack::assetbundle::AssetBundle;
 use unitypack::object::ObjectValue;
 use unitypack::engine::texture::IntoTexture2D;
 use unitypack::engine::text::IntoTextAsset;
+use unitypack::engine::font::IntoFontDef;
+use unitypack::engine::font::IntoFont;
 use unitypack::engine::EngineObject;
+use sfml::graphics::Font;
 use error::{Error, Result};
 use cards::*;
 use std::collections::HashMap;
@@ -15,11 +18,23 @@ pub struct Assets {
     texture_cache: HashMap<String, String>, // object_name -> file|asset
     card_frames: HashMap<String, &'static [u8]>,
     card_assets: HashMap<String, &'static [u8]>,
+    fonts: HashMap<String, HsFont>,
 }
 
 struct UnpackDef {
     pub file_paths: Vec<String>,
     pub object_type: String,
+}
+
+pub struct HsFont {
+    pub font: Font,
+    pub ascent: f32,
+    pub character_padding: i32,
+    pub character_spacing: i32,
+    pub font_size: f32,
+    pub kerning: Option<f32>,
+    pub line_spacing: f32,
+    pub pixel_scale: f32,
 }
 
 impl UnpackDef {
@@ -87,6 +102,28 @@ fn object_hash(unpackdef: &UnpackDef) -> HashMap<String, String> {
                                 };
                                 //println!("{} - {}|{}|{}", text.object.name.clone(), asset_path, i, id);
                                 map.insert(text.object.name, format!("{}|{}|{}", asset_path, i, id));
+                            } else if obj.type_name == "FontDef" {
+                                let font = match engine_object {
+                                    ObjectValue::EngineObject(engine_object) => {
+                                        engine_object.to_fontdef(&asset).unwrap()
+                                    }
+                                    _ => {
+                                        panic!("Invalid engine object: not FontDef type");
+                                    }
+                                };
+                                //println!("{}", font.font.path_id);
+                                map.insert(format!("{}|{}|{}", asset_path, i, id), format!("{}|{}", font.font.file_name, font.font.path_id) );
+                            } else if obj.type_name == "Font" {
+                                let font = match engine_object {
+                                    ObjectValue::EngineObject(engine_object) => {
+                                        engine_object.to_font().unwrap()
+                                    }
+                                    _ => {
+                                        panic!("Invalid engine object: not Font type");
+                                    }
+                                };
+                                //println!("{} - {}|{}|{}", text.object.name.clone(), asset_path, i, id);
+                                map.insert(font.object.name, format!("{}|{}|{}", asset_path, i, id));
                             }
                         }
                     }
@@ -104,14 +141,16 @@ fn object_hash(unpackdef: &UnpackDef) -> HashMap<String, String> {
 impl Assets {
     pub fn new(assets_path: &str) -> Result<Self> {
         // generate asset catalog
-        let catalog = Assets::catalog(assets_path)?;
+        let textures = Assets::load_textures(assets_path)?;
         let card_frames = Assets::load_card_frames();
         let card_assets = Assets::load_card_assets();
+        let fonts = Assets::load_fonts(assets_path)?;
 
         Ok(Assets {
-            texture_cache: catalog,
+            texture_cache: textures,
             card_frames: card_frames,
             card_assets: card_assets,
+            fonts: fonts,
         })
     }
 
@@ -137,9 +176,10 @@ impl Assets {
         }
     }
 
-    fn catalog(assets_path: &str) -> Result<HashMap<String, String>> {
+    fn load_textures(assets_path: &str) -> Result<HashMap<String, String>> {
         // files containing textures
         let textures = UnpackDef::new(&[assets_path, "/*texture*.unity3d"].join(""), "Texture2D");
+        //let shared = UnpackDef::new(&[assets_path, "/shared*.unity3d"].join(""), "Font");
 
         let asset_src = vec![textures];
 
@@ -179,6 +219,33 @@ impl Assets {
             MANA_GEM,
         );
         res
+    }
+
+    fn load_fonts(assets_path: &str) -> Result<HashMap<String, HsFont>> {
+        
+        //let fonts = UnpackDef::new(&[assets_path, "/*font*.unity3d"].join(""), "FontDef");
+        let shared = UnpackDef::new(&[assets_path, "/shared*.unity3d"].join(""), "Font");
+
+        let fonts = object_hash(&shared); // contains font definitions
+
+        let mut res = HashMap::new();
+        for key in fonts.keys() {
+            let engine_object = Assets::catalog_get(&fonts, key)?;
+            let font = engine_object.to_font()?;
+            
+            res.insert(font.object.name.clone(), HsFont {
+                ascent: font.ascent,
+                character_padding: font.character_padding,
+                character_spacing: font.character_spacing,
+                font_size: font.font_size,
+                kerning: font.kerning,
+                line_spacing: font.line_spacing,
+                pixel_scale: font.pixel_scale,
+                font: Font::from_memory(&font.data).ok_or(Error::ObjectTypeError)?,
+            });
+        }
+
+        Ok(res)
     }
 
     pub fn get_card_frame(&self, card_type: &CardType, card_class: &CardClass) -> Result<&[u8]> {
