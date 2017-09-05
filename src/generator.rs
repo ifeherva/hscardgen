@@ -3,6 +3,7 @@ use cards::*;
 use error::{Error, Result};
 use sfml::graphics::{text_style, Color, Font, Image, RenderTarget, RenderTexture, Sprite, Text,
                      Texture, Transformable};
+use sfml::system::Vector2f;
 
 const FONT_BELWE: &'static str = "Belwe";
 const FONT_BELWE_OUTLINE: &'static str = "Belwe_Outline";
@@ -77,27 +78,22 @@ impl Generator {
 
         let belwe_raw = self.assets.get_font(FONT_BELWE)?;
         let belwe = Font::from_memory(&belwe_raw.data).ok_or(Error::ObjectTypeError)?;
-        /*HsFont {
-                ascent: font.ascent,
-                character_padding: font.character_padding,
-                character_spacing: font.character_spacing,
-                font_size: font.font_size,
-                kerning: font.kerning,
-                line_spacing: font.line_spacing,
-                pixel_scale: font.pixel_scale,
-                font: Font::from_memory(&font.data).ok_or(Error::ObjectTypeError)?,
-        }*/
 
         // draw mana cost
         match card.cost {
             Some(cost) => {
-                println!("pixel_scale: {} name: {}", belwe_raw.pixel_scale, card_name);
-                let mut mana_text = Text::new_init("1", &belwe, 160);
+                let center = Vector2f::new(112f32, 161f32);
+
+                let mut mana_text = Text::new_init(&cost.to_string(), &belwe, 160);
                 mana_text.set_style(text_style::BOLD);
                 mana_text.set_outline_color(&Color::black());
                 mana_text.set_outline_thickness(4f32);
-                mana_text.move2f(68f32, 39f32);
                 mana_text.scale2f(1f32 + belwe_raw.pixel_scale, 1f32 + belwe_raw.pixel_scale);
+                let bounds = mana_text.global_bounds();
+                mana_text.set_position2f(
+                    center.x - (bounds.width / 2f32) - bounds.left,
+                    center.y - (bounds.height / 2f32) - bounds.top,
+                );
                 canvas.draw(&mana_text);
             }
             None => {}

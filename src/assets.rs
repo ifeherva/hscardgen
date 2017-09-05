@@ -27,17 +27,6 @@ struct UnpackDef {
     pub object_type: String,
 }
 
-pub struct HsFont {
-    pub font: Font,
-    pub ascent: f32,
-    pub character_padding: i32,
-    pub character_spacing: i32,
-    pub font_size: f32,
-    pub kerning: Option<f32>,
-    pub line_spacing: f32,
-    pub pixel_scale: f32,
-}
-
 impl UnpackDef {
     fn new(path: &str, object_type: &str) -> Self {
         UnpackDef {
@@ -224,7 +213,6 @@ impl Assets {
 
     fn load_fonts(assets_path: &str) -> Result<HashMap<String, font::Font>> {
         
-        //let fonts = UnpackDef::new(&[assets_path, "/*font*.unity3d"].join(""), "FontDef");
         let shared = UnpackDef::new(&[assets_path, "/shared*.unity3d"].join(""), "Font");
 
         let fonts = object_hash(&shared); // contains font definitions
@@ -234,17 +222,6 @@ impl Assets {
             let engine_object = Assets::catalog_get(&fonts, key)?;
             let font = engine_object.to_font()?;
             res.insert(font.object.name.clone(), font);
-            /*
-            res.insert(font.object.name.clone(), HsFont {
-                ascent: font.ascent,
-                character_padding: font.character_padding,
-                character_spacing: font.character_spacing,
-                font_size: font.font_size,
-                kerning: font.kerning,
-                line_spacing: font.line_spacing,
-                pixel_scale: font.pixel_scale,
-                font: Font::from_memory(&font.data).ok_or(Error::ObjectTypeError)?,
-            });*/
         }
 
         Ok(res)
