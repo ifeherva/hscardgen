@@ -13,6 +13,7 @@ pub enum Error {
     AssetNotFoundError,
     InvalidCardError,
     ObjectTypeError,
+    SFMLError,
 }
 
 impl From<unitypack::error::Error> for Error {

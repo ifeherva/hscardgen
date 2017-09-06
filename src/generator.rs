@@ -57,27 +57,31 @@ impl Generator {
 
         let transparent_color = Color::rgba(0, 0, 0, 0);
 
-        let card_frame =
-            Image::from_memory(self.assets.get_card_frame(card_type, card_class)?).unwrap();
-        let card_frame_texture = Texture::from_image(&card_frame).unwrap();
+        let card_frame = Image::from_memory(self.assets.get_card_frame(card_type, card_class)?)
+            .ok_or(Error::SFMLError)?;
+        let card_frame_texture = Texture::from_image(&card_frame).ok_or(Error::SFMLError)?;
 
         // we draw on this canvas
-        let mut canvas =
-            RenderTexture::new(card_frame.size().x, card_frame.size().y, false).unwrap();
+        let mut canvas = RenderTexture::new(card_frame.size().x, card_frame.size().y, false)
+            .ok_or(Error::SFMLError)?;
         canvas.clear(&transparent_color);
+
+        // draw texture
+        let texture = self.assets.get_card_texture(card_id)?;
 
         // draw card frame
         canvas.draw(&Sprite::with_texture(&card_frame_texture));
 
         // draw mana gem
-        let mana_gem = Image::from_memory(self.assets.get_card_asset("MANA_GEM")?).unwrap();
-        let mana_gem_texture = Texture::from_image(&mana_gem).unwrap();
+        let mana_gem =
+            Image::from_memory(self.assets.get_card_asset("MANA_GEM")?).ok_or(Error::SFMLError)?;
+        let mana_gem_texture = Texture::from_image(&mana_gem).ok_or(Error::SFMLError)?;
         let mut mana_gem_sprite = Sprite::with_texture(&mana_gem_texture);
         mana_gem_sprite.move2f(24f32, 75f32);
         canvas.draw(&mana_gem_sprite);
 
         let belwe_raw = self.assets.get_font(FONT_BELWE)?;
-        let belwe = Font::from_memory(&belwe_raw.data).ok_or(Error::ObjectTypeError)?;
+        let belwe = Font::from_memory(&belwe_raw.data).ok_or(Error::SFMLError)?;
 
         // draw mana cost
         match card.cost {
