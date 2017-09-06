@@ -16,10 +16,26 @@ use resources::*;
 
 /// Stores graphic elements to construct cards
 pub struct Assets {
-    texture_cache: HashMap<String, String>, // object_name -> file|asset
+    texture_cache: (HashMap<String, String>, HashMap<String, ObjectLocator>), // cards, textures
     card_frames: HashMap<String, &'static [u8]>,
     card_assets: HashMap<String, &'static [u8]>,
     fonts: HashMap<String, Font>,
+}
+
+struct ObjectLocator {
+    object_pointer: ObjectPointer,
+    asset_path: String,
+    asset_id: usize,
+}
+
+impl ObjectLocator {
+    pub fn resolve(&self) -> Result<ObjectValue> {
+        let mut asset_bundle = AssetBundle::load_from_file(&self.asset_path)?;
+        asset_bundle.resolve_asset(self.asset_id)?;
+        let asset = &mut asset_bundle.assets[self.asset_id];
+        let obj = asset.objects.get(&self.object_pointer.path_id).ok_or(Error::ObjectTypeError)?;
+        Ok(obj.read_signature(asset, &mut asset_bundle.signature)?)
+    }
 }
 
 struct UnpackDef {
@@ -55,7 +71,7 @@ impl UnpackDef {
 }
 
 // -> cards, textures
-fn extract_textures(unpackdef: &UnpackDef) -> Result<(HashMap<String, String>, HashMap<String, ObjectPointer>)> {
+fn extract_textures(unpackdef: &UnpackDef) -> Result<(HashMap<String, String>, HashMap<String, ObjectLocator>)> {
     unpackdef
         .file_paths
         .par_iter()
@@ -97,7 +113,7 @@ fn extract_textures(unpackdef: &UnpackDef) -> Result<(HashMap<String, String>, H
                                 };
                             
                             if obj.type_name == "AssetBundle" {
-                                match process_asset_bundle(engine_object, &mut textures) {
+                                match process_asset_bundle(engine_object, &mut textures, asset_path, i) {
                                     Ok(_) => {},
                                     Err(_) => {continue;},
                                 };
@@ -120,9 +136,7 @@ fn extract_textures(unpackdef: &UnpackDef) -> Result<(HashMap<String, String>, H
             p.0.extend(np.0);
             p.1.extend(np.1);
             Ok(p)
-        }) 
-
-
+        })
 }
 
 fn process_game_object(engine_object: ObjectValue, cards: &mut HashMap<String, String>, objects: &HashMap<i64, ObjectInfo>, asset: &Asset, signature: &mut Signature) -> Result<()> {
@@ -179,13 +193,12 @@ fn process_game_object(engine_object: ObjectValue, cards: &mut HashMap<String, S
     }
 
     path = format!("final/{}", path);
-
     cards.insert(card_id.clone(), path.to_lowercase());
 
     Ok(())
 }
 
-fn process_asset_bundle(engine_object: ObjectValue, textures: &mut HashMap<String, ObjectPointer>) -> Result<()> {
+fn process_asset_bundle(engine_object: ObjectValue, textures: &mut HashMap<String, ObjectLocator>, asset_path: &String, asset_id: usize) -> Result<()> {
     match engine_object {
         ObjectValue::EngineObject(mut engine_object) => {
             let mut items = engine_object.map.remove(&"m_Container".to_string()).ok_or(Error::ObjectTypeError)?.into_vec()?;
@@ -227,7 +240,11 @@ fn process_asset_bundle(engine_object: ObjectValue, textures: &mut HashMap<Strin
                 if !path.starts_with("final/assets") {
                     continue;
                 }
-                textures.insert(path.clone(), asset);
+                textures.insert(path.clone(), ObjectLocator {
+                    object_pointer: asset,
+                    asset_path: asset_path.clone(),
+                    asset_id: asset_id,
+                });
             }
             Ok(())
         }
@@ -374,14 +391,14 @@ impl Assets {
         }
     }
 
-    fn load_textures(assets_path: &str) -> Result<HashMap<String, String>> {
+    fn load_textures(assets_path: &str) -> Result<(HashMap<String, String>, HashMap<String, ObjectLocator>)> {
         // files containing textures
         let textures = UnpackDef::new(&[assets_path, "/*texture*.unity3d"].join(""), vec!["GameObject".to_string(), "AssetBundle".to_string()]);
         let cards = UnpackDef::new(&[assets_path, "/cards*.unity3d"].join(""), vec!["GameObject".to_string(),"AssetBundle".to_string()]);
 
         let asset_src = vec![textures, cards];
 
-        let res = asset_src
+        Ok(asset_src
             .par_iter()
             .fold(
                 || (HashMap::new(),HashMap::new()),
@@ -400,9 +417,7 @@ impl Assets {
                     a.1.extend(b.1);
                     a
                 },
-            );
-
-        Ok(HashMap::new())
+            ))
     }
 
     fn load_card_frames() -> HashMap<String, &'static [u8]> {
@@ -468,7 +483,16 @@ impl Assets {
     }
 
     pub fn get_card_texture(&self, card_id: &str) -> Result<Vec<u8>> {
-        let engine_object = Assets::catalog_get(&self.texture_cache, card_id)?;
+        let path = self.texture_cache.0.get(card_id).ok_or(Error::CardNotFoundError)?;
+        let oplocator = self.texture_cache.1.get(path).ok_or(Error::CardNotFoundError)?;
+        
+        let engine_object = match oplocator.resolve()? {
+            ObjectValue::EngineObject(engine_object) => engine_object,
+            _ => {
+                return Err(Error::AssetNotFoundError);
+            }
+        };
+        
         let texture2d = engine_object.to_texture2d()?;
         let image = texture2d.to_image()?;
         Ok(image)
