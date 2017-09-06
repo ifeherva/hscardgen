@@ -1,6 +1,6 @@
 use unitypack::assetbundle::AssetBundle;
 use unitypack::object::{ObjectValue, ObjectPointer, ObjectInfo};
-use unitypack::engine::texture::IntoTexture2D;
+use unitypack::engine::texture::{IntoTexture2D, Texture2D};
 use unitypack::engine::text::IntoTextAsset;
 use unitypack::engine::object::IntoGameObject;
 use unitypack::engine::font::{Font, IntoFont, IntoFontDef};
@@ -482,7 +482,7 @@ impl Assets {
         Ok(font)
     }
 
-    pub fn get_card_texture(&self, card_id: &str) -> Result<Vec<u8>> {
+    pub fn get_card_texture(&self, card_id: &str) -> Result<Texture2D> {
         let path = self.texture_cache.0.get(card_id).ok_or(Error::CardNotFoundError)?;
         let oplocator = self.texture_cache.1.get(path).ok_or(Error::CardNotFoundError)?;
         
@@ -493,8 +493,6 @@ impl Assets {
             }
         };
         
-        let texture2d = engine_object.to_texture2d()?;
-        let image = texture2d.to_image()?;
-        Ok(image)
+        Ok(engine_object.to_texture2d()?)
     }
 }

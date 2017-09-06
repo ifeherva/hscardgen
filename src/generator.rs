@@ -1,9 +1,9 @@
 use assets::Assets;
 use cards::*;
 use error::{Error, Result};
-use sfml::graphics::{text_style, Color, Font, Image, RenderTarget, RenderTexture, Sprite, Text,
-                     Texture, Transformable};
 use sfml::system::Vector2f;
+use sfml::graphics::{text_style, Color, Font, Image, IntRect, RenderTarget, RenderTexture, Sprite,
+                     Text, Texture, Transformable};
 
 const FONT_BELWE: &'static str = "Belwe";
 const FONT_BELWE_OUTLINE: &'static str = "Belwe_Outline";
@@ -66,8 +66,25 @@ impl Generator {
             .ok_or(Error::SFMLError)?;
         canvas.clear(&transparent_color);
 
-        // draw texture
-        let texture = self.assets.get_card_texture(card_id)?;
+        // draw image portrait
+        {
+            let portrait = self.assets.get_card_texture(card_id)?;
+            let width = portrait.width;
+            let height = portrait.height;
+            let portrait_img = Image::create_from_pixels(width, height, &portrait.to_image()?)
+                .ok_or(Error::SFMLError)?;
+            let portrait_texture = Texture::from_image(&portrait_img).ok_or(Error::SFMLError)?;
+            let mut portrait_sprite = Sprite::with_texture(&portrait_texture);
+            portrait_sprite.set_texture_rect(&IntRect::new(
+                0,
+                height as i32,
+                width as i32,
+                -1 * height as i32,
+            ));
+            portrait_sprite.set_scale2f(529f32 / width as f32, 529f32 / width as f32);
+            portrait_sprite.set_position2f(123f32, 123f32);
+            canvas.draw(&portrait_sprite);
+        }
 
         // draw card frame
         canvas.draw(&Sprite::with_texture(&card_frame_texture));
