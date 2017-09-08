@@ -1,7 +1,7 @@
 use assets::Assets;
 use cards::*;
 use error::{Error, Result};
-use sfml::system::Vector2f;
+use sfml::system::{Vector2, Vector2f};
 use sfml::graphics::{text_style, Color, Font, Image, IntRect, RenderTarget, RenderTexture, Sprite,
                      Text, Texture, Transformable};
 
@@ -56,38 +56,18 @@ impl Generator {
         };
 
         let transparent_color = Color::rgba(0, 0, 0, 0);
+        let card_size = Vector2 { x: 764, y: 1100 };
 
-        let card_frame = Image::from_memory(self.assets.get_card_frame(card_type, card_class)?)
-            .ok_or(Error::SFMLError)?;
-        let card_frame_texture = Texture::from_image(&card_frame).ok_or(Error::SFMLError)?;
-
-        // we draw on this canvas
-        let mut canvas = RenderTexture::new(card_frame.size().x, card_frame.size().y, false)
-            .ok_or(Error::SFMLError)?;
+        // Create transparent canvas
+        let mut canvas =
+            RenderTexture::new(card_size.x, card_size.y, false).ok_or(Error::SFMLError)?;
         canvas.clear(&transparent_color);
 
         // draw image portrait
-        {
-            let portrait = self.assets.get_card_texture(card_id)?;
-            let width = portrait.width;
-            let height = portrait.height;
-            let portrait_img = Image::create_from_pixels(width, height, &portrait.to_image()?)
-                .ok_or(Error::SFMLError)?;
-            let portrait_texture = Texture::from_image(&portrait_img).ok_or(Error::SFMLError)?;
-            let mut portrait_sprite = Sprite::with_texture(&portrait_texture);
-            portrait_sprite.set_texture_rect(&IntRect::new(
-                0,
-                height as i32,
-                width as i32,
-                -1 * height as i32,
-            ));
-            portrait_sprite.set_scale2f(529f32 / width as f32, 529f32 / width as f32);
-            portrait_sprite.set_position2f(123f32, 123f32);
-            canvas.draw(&portrait_sprite);
-        }
+        self.draw_card_portrait(card_id, &card_type, &mut canvas)?;
 
         // draw card frame
-        canvas.draw(&Sprite::with_texture(&card_frame_texture));
+        self.draw_card_frame(&card_type, &card_class, &mut canvas)?;
 
         // draw mana gem
         let mana_gem =
@@ -123,5 +103,69 @@ impl Generator {
         // render off screen
         canvas.display();
         Ok(canvas.texture().copy_to_image().unwrap())
+    }
+
+    fn draw_card_frame(
+        &self,
+        card_type: &CardType,
+        card_class: &CardClass,
+        canvas: &mut RenderTexture,
+    ) -> Result<()> {
+        // TODO: card frame is currently loaded from a texture, we want to read it from assets
+        let card_frame = Image::from_memory(self.assets.get_card_frame(card_type, card_class)?)
+            .ok_or(Error::SFMLError)?;
+        let texture = Texture::from_image(&card_frame).ok_or(Error::SFMLError)?;
+        canvas.draw(&Sprite::with_texture(&texture));
+        Ok(())
+    }
+
+    fn draw_card_portrait(
+        &self,
+        card_id: &str,
+        card_type: &CardType,
+        canvas: &mut RenderTexture,
+    ) -> Result<()> {
+        let portrait = self.assets.get_card_texture(card_id)?;
+        let width = portrait.width;
+        let height = portrait.height;
+        let portrait_img = Image::create_from_pixels(width, height, &portrait.to_image()?)
+            .ok_or(Error::SFMLError)?;
+        let portrait_texture = Texture::from_image(&portrait_img).ok_or(Error::SFMLError)?;
+        let mut portrait_sprite = Sprite::with_texture(&portrait_texture);
+
+        // flip image
+        portrait_sprite.flip_texture();
+        portrait_sprite.set_scale2f(529f32 / width as f32, 529f32 / width as f32);
+
+        let portrait_position = match *card_type {
+            CardType::SPELL => Vector2f {
+                x: 123f32,
+                y: 123f32,
+            },
+            _ => {
+                return Err(Error::NotImplementedError(
+                    format!("Card type {:?} is not yet implemented", card_type),
+                ));
+            }
+        };
+        portrait_sprite.set_position(&portrait_position);
+        canvas.draw(&portrait_sprite);
+        Ok(())
+    }
+}
+
+trait SpriteTransforms {
+    fn flip_texture(&mut self);
+}
+
+impl<'s> SpriteTransforms for Sprite<'s> {
+    fn flip_texture(&mut self) {
+        let texture_rect = self.texture_rect();
+        self.set_texture_rect(&IntRect::new(
+            0,
+            texture_rect.height,
+            texture_rect.width,
+            -1 * texture_rect.height,
+        ));
     }
 }

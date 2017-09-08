@@ -441,8 +441,7 @@ impl Assets {
     fn load_fonts(assets_path: &str) -> Result<HashMap<String, Font>> {
         
         let shared = UnpackDef::new(&[assets_path, "/shared*.unity3d"].join(""), vec!["Font".to_string()]);
-
-        let fonts = object_hash(&shared); // contains font definitions
+        let fonts = object_hash(&shared);
 
         let mut res = HashMap::new();
         for key in fonts.keys() {

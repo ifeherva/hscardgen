@@ -2,9 +2,7 @@ extern crate hscardgen;
 extern crate sfml;
 
 use hscardgen::generator::*;
-use sfml::graphics::{Color, RenderWindow, Sprite, Texture};
-use sfml::window::{ContextSettings, Event, Style, VideoMode};
-use sfml::graphics::RenderTarget;
+use sfml::graphics::Texture;
 
 fn main() {
     let generator = Generator::new("/Applications/Hearthstone/Data/OSX/").unwrap();

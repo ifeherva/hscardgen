@@ -14,6 +14,7 @@ pub enum Error {
     InvalidCardError,
     ObjectTypeError,
     SFMLError,
+    NotImplementedError(String),
 }
 
 impl From<unitypack::error::Error> for Error {
