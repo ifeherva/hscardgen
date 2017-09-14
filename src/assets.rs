@@ -436,13 +436,14 @@ impl Assets {
 
     fn load_card_frames(assets_path: &str, meshes: &HashMap<String, Mesh>) -> Result<HashMap<String, Texture>> {
         // TODO: merge with card assets map
-        let shared = UnpackDef::new(&[assets_path, "/gameobjects*.unity3d"].join(""), vec!["Texture2D".to_string()]);
-        let textures = object_hash(&shared);
+        let gameobjects = UnpackDef::new(&[assets_path, "/gameobjects*.unity3d"].join(""), vec!["Texture2D".to_string()]);
+        let shared = UnpackDef::new(&[assets_path, "/shared*.unity3d"].join(""), vec!["Texture2D".to_string()]);
+        let mut textures = object_hash(&gameobjects);
+        textures.extend(object_hash(&shared));
 
         let mut res = HashMap::new();
 
         {
-            //let texture = Assets::catalog_get(&textures, "Card_Inhand_Ability_Mage")?.to_texture2d()?;
             res.insert(
                 format!("{:?}_{:?}", CardType::Spell, CardClass::Mage),
                 //FRAME_SPELL_MAGE,
@@ -481,7 +482,7 @@ impl Assets {
         let actors = UnpackDef::new(&[assets_path, "/actors*.unity3d"].join(""), vec!["Mesh".to_string()]);
         let meshes = object_hash(&actors);
 
-        let meshes_to_keep = vec!["InHand_Ability_Base_mesh".to_string()];
+        let meshes_to_keep = vec!["InHand_Ability_Base_mesh".to_string(), "InHand_Ability_Description_mesh".to_string()];
         
         let mut res = HashMap::new();
         for keep in meshes_to_keep {
