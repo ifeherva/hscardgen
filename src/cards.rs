@@ -67,12 +67,12 @@ pub enum CardRarity {
 
 #[derive(Debug, Deserialize)]
 pub enum CardType {
-    MINION,
-    SPELL,
-    WEAPON,
-    ENCHANTMENT,
-    HERO_POWER,
-    HERO,
+    Minion,
+    Spell,
+    Weapon,
+    Enchantment,
+    HeroPower,
+    Hero,
 }
 #[derive(Debug, Deserialize)]
 pub enum CardSet {

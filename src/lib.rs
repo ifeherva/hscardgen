@@ -1,3 +1,4 @@
+extern crate byteorder;
 extern crate glob;
 extern crate rayon;
 extern crate serde_json;
@@ -9,6 +10,7 @@ extern crate serde_derive;
 
 pub mod error;
 pub mod generator;
+mod builder;
 mod assets;
 mod cards;
 mod resources;

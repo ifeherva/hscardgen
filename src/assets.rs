@@ -5,21 +5,25 @@ use unitypack::engine::text::IntoTextAsset;
 use unitypack::engine::object::IntoGameObject;
 use unitypack::engine::font::{Font, IntoFont, IntoFontDef};
 use unitypack::engine::EngineObject;
+use unitypack::engine::mesh::{Mesh, IntoMesh};
 use unitypack::asset::Asset;
 use unitypack::assetbundle::Signature;
+use sfml::graphics::Texture;
 use error::{Error, Result};
 use cards::*;
 use std::collections::HashMap;
 use glob::glob;
 use rayon::prelude::*;
 use resources::*;
+use builder;
 
 /// Stores graphic elements to construct cards
 pub struct Assets {
-    texture_cache: (HashMap<String, String>, HashMap<String, ObjectLocator>), // cards, textures
-    card_frames: HashMap<String, &'static [u8]>,
+    portraits: (HashMap<String, String>, HashMap<String, ObjectLocator>), // cards, textures
+    card_frames: HashMap<String, Texture>,
     card_assets: HashMap<String, &'static [u8]>,
     fonts: HashMap<String, Font>,
+    meshes: HashMap<String, Mesh>,
 }
 
 struct ObjectLocator {
@@ -43,14 +47,25 @@ struct UnpackDef {
     pub object_types: Vec<String>,
 }
 
-trait Contains {
-    fn contains(&self, item: &str) -> bool;
+trait Contains<T> {
+    fn contains(&self, item: &T) -> bool;
 }
 
-impl Contains for Vec<String> {
-    fn contains(&self, item: &str) -> bool {
+impl Contains<String> for Vec<String> {
+    fn contains(&self, item: &String) -> bool {
         for i in self {
             if *i == *item {
+                return true;
+            }
+        }
+        false
+    }
+}
+
+impl Contains<&'static str> for Vec<&'static str> {
+    fn contains(&self, item: &&'static str) -> bool {
+        for i in self {
+            if i == item {
                 return true;
             }
         }
@@ -325,20 +340,16 @@ fn object_hash(unpackdef: &UnpackDef) -> HashMap<String, String> {
                                     }
                                 };
                                 map.insert(font.object.name, format!("{}|{}|{}", asset_path, i, id));
-                            } else if obj.type_name == "AssetBundle" {
-                                /*let asset_bundle = match engine_object {
-                                    ObjectValue::EngineObject(mut engine_object) => {
-                                        let mut items = engine_object.map.remove(&"m_Container".to_string()).unwrap().into_vec().unwrap();
-                                        
-                                        for item in items.drain(0..) {
-                                            let p = item.into_pair().unwrap();
-                                            //println!("{}", p.0.to_string().unwrap());
-                                        }
+                            } else if obj.type_name == "Mesh" {
+                                let mesh = match engine_object {
+                                    ObjectValue::EngineObject(engine_object) => {
+                                        engine_object.to_mesh().unwrap()
                                     }
                                     _ => {
-                                        panic!("Invalid engine object: not AssetBundle type");
+                                        panic!("Invalid engine object: not Mesh type");
                                     }
-                                };*/
+                                };
+                                map.insert(mesh.object.name, format!("{}|{}|{}", asset_path, i, id));
                             }
                         }
                     }
@@ -356,24 +367,27 @@ fn object_hash(unpackdef: &UnpackDef) -> HashMap<String, String> {
 impl Assets {
     pub fn new(assets_path: &str) -> Result<Self> {
         // generate asset catalog
-        let textures = Assets::load_textures(assets_path)?;
-        let card_frames = Assets::load_card_frames();
+        let meshes = Assets::load_meshes(assets_path)?;
+        let portraits = Assets::load_portraits(assets_path)?;
+        let card_frames = Assets::load_card_frames(assets_path, &meshes)?;
         let card_assets = Assets::load_card_assets();
         let fonts = Assets::load_fonts(assets_path)?;
+        
 
         Ok(Assets {
-            texture_cache: textures,
+            portraits: portraits,
             card_frames: card_frames,
             card_assets: card_assets,
             fonts: fonts,
+            meshes: meshes,
         })
     }
 
-    fn catalog_get(catalog: &HashMap<String, String>, key: &str) -> Result<EngineObject> {
+    pub fn catalog_get(catalog: &HashMap<String, String>, key: &str) -> Result<EngineObject> {
         let path = match catalog.get(key) {
             Some(p) => p,
             None => {
-                return Err(Error::ItemNotFoundError);
+                return Err(Error::AssetNotFoundError(format!("Asset not found in cache: {}", key)));
             }
         };
 
@@ -391,7 +405,7 @@ impl Assets {
         }
     }
 
-    fn load_textures(assets_path: &str) -> Result<(HashMap<String, String>, HashMap<String, ObjectLocator>)> {
+    fn load_portraits(assets_path: &str) -> Result<(HashMap<String, String>, HashMap<String, ObjectLocator>)> {
         // files containing textures
         let textures = UnpackDef::new(&[assets_path, "/*texture*.unity3d"].join(""), vec!["GameObject".to_string(), "AssetBundle".to_string()]);
         let cards = UnpackDef::new(&[assets_path, "/cards*.unity3d"].join(""), vec!["GameObject".to_string(),"AssetBundle".to_string()]);
@@ -420,13 +434,23 @@ impl Assets {
             ))
     }
 
-    fn load_card_frames() -> HashMap<String, &'static [u8]> {
+    fn load_card_frames(assets_path: &str, meshes: &HashMap<String, Mesh>) -> Result<HashMap<String, Texture>> {
+        // TODO: merge with card assets map
+        let shared = UnpackDef::new(&[assets_path, "/gameobjects*.unity3d"].join(""), vec!["Texture2D".to_string()]);
+        let textures = object_hash(&shared);
+
         let mut res = HashMap::new();
-        res.insert(
-            format!("{:?}_{:?}", CardType::SPELL, CardClass::Mage),
-            FRAME_SPELL_MAGE,
-        );
-        res
+
+        {
+            //let texture = Assets::catalog_get(&textures, "Card_Inhand_Ability_Mage")?.to_texture2d()?;
+            res.insert(
+                format!("{:?}_{:?}", CardType::Spell, CardClass::Mage),
+                //FRAME_SPELL_MAGE,
+                builder::build_frame(&textures, &meshes, &CardClass::Mage, &CardType::Spell)?,
+            );
+        }
+        
+        Ok(res)
     }
 
     fn load_card_assets() -> HashMap<String, &'static [u8]> {
@@ -453,13 +477,30 @@ impl Assets {
         Ok(res)
     }
 
-    pub fn get_card_frame(&self, card_type: &CardType, card_class: &CardClass) -> Result<&[u8]> {
+    fn load_meshes(assets_path: &str) -> Result<HashMap<String, Mesh>> {
+        let actors = UnpackDef::new(&[assets_path, "/actors*.unity3d"].join(""), vec!["Mesh".to_string()]);
+        let meshes = object_hash(&actors);
+
+        let meshes_to_keep = vec!["InHand_Ability_Base_mesh".to_string()];
+        
+        let mut res = HashMap::new();
+        for keep in meshes_to_keep {
+            let engine_object = Assets::catalog_get(&meshes, &keep)?;
+            let mesh = engine_object.to_mesh()?;
+            res.insert(mesh.object.name.clone(), mesh);
+        }
+
+        Ok(res)
+    }
+
+    pub fn get_card_frame(&self, card_type: &CardType, card_class: &CardClass) -> Result<&Texture> {
+        let key = format!("{:?}_{:?}", card_type, card_class);
         Ok(match self.card_frames
-            .get(&format!("{:?}_{:?}", card_type, card_class))
+            .get(&key)
         {
             Some(k) => k,
             None => {
-                return Err(Error::AssetNotFoundError);
+                return Err(Error::AssetNotFoundError(format!("Cannot find {}", key)));
             }
         })
     }
@@ -470,25 +511,25 @@ impl Assets {
         {
             Some(k) => k,
             None => {
-                return Err(Error::AssetNotFoundError);
+                return Err(Error::AssetNotFoundError( format!("Cannot find {}", asset)));
             }
         })
     }
 
     pub fn get_font(&self, font_name: &str) -> Result<&Font> {
-        let font = self.fonts.get(font_name).ok_or(Error::AssetNotFoundError)?;
+        let font = self.fonts.get(font_name).ok_or(Error::AssetNotFoundError( format!("Cannot find font named {}", font_name)  ))?;
 
         Ok(font)
     }
 
-    pub fn get_card_texture(&self, card_id: &str) -> Result<Texture2D> {
-        let path = self.texture_cache.0.get(card_id).ok_or(Error::CardNotFoundError)?;
-        let oplocator = self.texture_cache.1.get(path).ok_or(Error::CardNotFoundError)?;
+    pub fn get_card_portraits(&self, card_id: &str) -> Result<Texture2D> {
+        let path = self.portraits.0.get(card_id).ok_or(Error::CardNotFoundError)?;
+        let oplocator = self.portraits.1.get(path).ok_or(Error::CardNotFoundError)?;
         
         let engine_object = match oplocator.resolve()? {
             ObjectValue::EngineObject(engine_object) => engine_object,
             _ => {
-                return Err(Error::AssetNotFoundError);
+                return Err(Error::AssetNotFoundError( format!("Cannot find portrait for {}", card_id)));
             }
         };
         

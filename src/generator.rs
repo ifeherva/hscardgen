@@ -102,7 +102,7 @@ impl Generator {
 
         // render off screen
         canvas.display();
-        Ok(canvas.texture().copy_to_image().unwrap())
+        Ok(canvas.texture().copy_to_image().ok_or(Error::SFMLError)?)
     }
 
     fn draw_card_frame(
@@ -112,9 +112,10 @@ impl Generator {
         canvas: &mut RenderTexture,
     ) -> Result<()> {
         // TODO: card frame is currently loaded from a texture, we want to read it from assets
-        let card_frame = Image::from_memory(self.assets.get_card_frame(card_type, card_class)?)
-            .ok_or(Error::SFMLError)?;
-        let texture = Texture::from_image(&card_frame).ok_or(Error::SFMLError)?;
+        //let card_frame = Image::from_memory(self.assets.get_card_frame(card_type, card_class)?)
+        //   .ok_or(Error::SFMLError)?;
+        let texture = self.assets.get_card_frame(card_type, card_class)?;
+        //Texture::from_image(&card_frame).ok_or(Error::SFMLError)?;
         canvas.draw(&Sprite::with_texture(&texture));
         Ok(())
     }
@@ -125,7 +126,7 @@ impl Generator {
         card_type: &CardType,
         canvas: &mut RenderTexture,
     ) -> Result<()> {
-        let portrait = self.assets.get_card_texture(card_id)?;
+        let portrait = self.assets.get_card_portraits(card_id)?;
         let width = portrait.width;
         let height = portrait.height;
         let portrait_img = Image::create_from_pixels(width, height, &portrait.to_image()?)
@@ -138,7 +139,7 @@ impl Generator {
         portrait_sprite.set_scale2f(529f32 / width as f32, 529f32 / width as f32);
 
         let portrait_position = match *card_type {
-            CardType::SPELL => Vector2f {
+            CardType::Spell => Vector2f {
                 x: 123f32,
                 y: 123f32,
             },
