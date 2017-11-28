@@ -59,10 +59,10 @@ impl Generator {
         let mut canvas =
             RenderTexture::new(card_size.x, card_size.y, false).ok_or(Error::SFMLError)?;
         canvas.clear(&transparent_color);
-println!("Drawing portrait {}", card_id);
+
         // draw image portrait
         self.draw_card_portrait(card_id, &card_type, &mut canvas)?;
-println!("Drawing card frame {}", card_id);
+
         // draw card frame
         self.draw_card_frame(&card_type, &card_class, rarity, &mut canvas)?;
 
@@ -109,8 +109,13 @@ println!("Drawing card frame {}", card_id);
         rarity: &CardRarity,
         canvas: &mut RenderTexture,
     ) -> Result<()> {
-        let texture = self.assets.get_card_frame(card_type, card_class, rarity)?;
-        canvas.draw(&Sprite::with_texture(texture.texture()));
+        let card_frame = self.assets.get_card_frame(card_type, card_class, rarity)?;
+        let width = card_frame.size().x;
+        let mut frame_sprite = Sprite::with_texture(card_frame.texture());
+        frame_sprite.flip_texture();
+        frame_sprite.set_scale(Vector2f::new(675f32 / width as f32, 675f32 / width as f32));
+        frame_sprite.set_position(Vector2f::new(53f32, 113f32));
+        canvas.draw(&frame_sprite);
         Ok(())
     }
 

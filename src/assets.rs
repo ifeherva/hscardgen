@@ -571,17 +571,15 @@ impl Assets {
     pub fn get_card_portraits(&self, card_id: &str) -> Result<Texture2D> {
         let path = self.portraits.0.get(card_id).ok_or(Error::CardNotFoundError)?;
         
-        // final/hs5-033_d.psd:2e354fb03897c45439cdc526c73ee2a1
         let oplocator;
         if !self.portraits.1.contains_key(path) && path.contains(":") {
+            // final/hs5-033_d.psd:2e354fb03897c45439cdc526c73ee2a1
             let basename: Vec<&str> = Path::new(path).file_name().ok_or(Error::CardNotFoundError)?
             .to_str().ok_or(Error::CardNotFoundError)?.split(":").collect();
             oplocator = self.portraits.1.get(&basename.get(0).ok_or(Error::CardNotFoundError)?.to_string()).ok_or(Error::CardNotFoundError)?;
         } else {
             oplocator = self.portraits.1.get(path).ok_or(Error::CardNotFoundError)?;
         }
-        
-        //let oplocator = self.portraits.1.get(path).ok_or(Error::CardNotFoundError)?;
         
         let engine_object = match oplocator.resolve()? {
             ObjectValue::EngineObject(engine_object) => engine_object,
