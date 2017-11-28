@@ -8,7 +8,7 @@ use unitypack::engine::EngineObject;
 use unitypack::engine::mesh::{Mesh, IntoMesh};
 use unitypack::asset::Asset;
 use unitypack::assetbundle::Signature;
-use sfml::graphics::Texture;
+use sfml::graphics::{Texture, RenderTexture};
 use error::{Error, Result};
 use cards::*;
 use std::collections::HashMap;
@@ -16,11 +16,12 @@ use glob::glob;
 use rayon::prelude::*;
 use resources::*;
 use builder;
+use std::path::Path;
 
 /// Stores graphic elements to construct cards
 pub struct Assets {
     portraits: (HashMap<String, String>, HashMap<String, ObjectLocator>), // cards, textures
-    card_frames: HashMap<String, Texture>,
+    card_frames: HashMap<String, RenderTexture>,
     card_assets: HashMap<String, &'static [u8]>,
     fonts: HashMap<String, Font>,
     meshes: HashMap<String, Mesh>,
@@ -74,14 +75,15 @@ impl Contains<&'static str> for Vec<&'static str> {
 }
 
 impl UnpackDef {
-    fn new(path: &str, object_types: Vec<String>) -> Self {
-        UnpackDef {
-            file_paths: glob(path)
-                .unwrap()
-                .map(|x| x.unwrap().to_str().unwrap().to_string())
-                .collect::<Vec<String>>(),
+    fn new(path: &str, object_types: Vec<String>) -> Result<Self> {
+        let file_paths: Result<Vec<String>> = glob(path)?.map(|x| -> Result<String> {
+            Ok(x?.to_str().ok_or(Error::InternalError)?.to_string())
+        }).collect();
+
+        Ok(UnpackDef {
+            file_paths: file_paths?,
             object_types: object_types,
-        }
+        })
     }
 }
 
@@ -196,6 +198,24 @@ fn process_game_object(engine_object: ObjectValue, cards: &mut HashMap<String, S
                 }
             }
         },
+        &ObjectValue::Map(ref m) => {
+            match m.get(&"component".to_string()).ok_or(Error::ObjectTypeError)? {
+                &ObjectValue::ObjectPointer(ref op) => {
+                    if op.file_id != 0 {
+                        return Err(Error::ObjectTypeError);
+                    }
+                    match objects[&op.path_id].read_signature(asset, signature)? {
+                        ObjectValue::EngineObject(engine_object) => engine_object,
+                        _ => {
+                            return Err(Error::ObjectTypeError);
+                        }
+                    }
+                },
+                _ => {
+                    return Err(Error::ObjectTypeError);
+                }
+            }
+        }
         _ => {
             return Err(Error::ObjectTypeError);
         }
@@ -255,11 +275,32 @@ fn process_asset_bundle(engine_object: ObjectValue, textures: &mut HashMap<Strin
                 if !path.starts_with("final/assets") {
                     continue;
                 }
+                
+                let asset_clone = asset.clone();
                 textures.insert(path.clone(), ObjectLocator {
                     object_pointer: asset,
                     asset_path: asset_path.clone(),
                     asset_id: asset_id,
                 });
+                
+                // Also store a lookup by basename to deal with Unity 5.6
+                let path2 = path.clone();
+                match Path::new(&path2).file_name() {
+                    Some(basename) => {
+                        match basename.to_str() {
+                            Some(b_name) => {
+                                textures.insert(b_name.to_string(), ObjectLocator {
+                                    object_pointer: asset_clone,
+                                    asset_path: asset_path.clone(),
+                                    asset_id: asset_id,
+                                });
+                            },
+                            None => {},
+                        };
+                        
+                    },
+                    None => {},
+                };
             }
             Ok(())
         }
@@ -393,8 +434,8 @@ impl Assets {
 
         let elems: Vec<&str> = path.split("|").collect();
         let file_path = elems[0];
-        let asset_num = elems[1].parse::<usize>().unwrap();
-        let object_id = elems[2].parse::<i64>().unwrap();
+        let asset_num = elems[1].parse::<usize>()?;
+        let object_id = elems[2].parse::<i64>()?;
         let mut asset_bundle = AssetBundle::load_from_file(file_path)?;
         asset_bundle.resolve_asset(asset_num)?;
         let asset = &mut asset_bundle.assets[asset_num];
@@ -407,37 +448,39 @@ impl Assets {
 
     fn load_portraits(assets_path: &str) -> Result<(HashMap<String, String>, HashMap<String, ObjectLocator>)> {
         // files containing textures
-        let textures = UnpackDef::new(&[assets_path, "/*texture*.unity3d"].join(""), vec!["GameObject".to_string(), "AssetBundle".to_string()]);
-        let cards = UnpackDef::new(&[assets_path, "/cards*.unity3d"].join(""), vec!["GameObject".to_string(),"AssetBundle".to_string()]);
+        let textures = UnpackDef::new(&[assets_path, "/*texture*.unity3d"].join(""), vec!["GameObject".to_string(), "AssetBundle".to_string()])?;
+        let cards = UnpackDef::new(&[assets_path, "/cards*.unity3d"].join(""), vec!["GameObject".to_string(),"AssetBundle".to_string()])?;
 
         let asset_src = vec![textures, cards];
 
         Ok(asset_src
             .par_iter()
             .fold(
-                || (HashMap::new(),HashMap::new()),
-                |mut maps, unpackdef| {
-                    let map_pair = extract_textures(&unpackdef);
-                    let z = map_pair.unwrap();
-                    maps.0.extend(z.0);
-                    maps.1.extend(z.1);
-                    maps
+                || Ok((HashMap::new(), HashMap::new())),
+                |maps: Result<(HashMap<String, String>, HashMap<String, ObjectLocator>)>, unpackdef| {
+                    let z = extract_textures(&unpackdef)?;
+                    let mut m = maps?;
+                    m.0.extend(z.0);
+                    m.1.extend(z.1);
+                    Ok(m)
                 },
             )
             .reduce(
-                || (HashMap::new(),HashMap::new()),
-                |mut a, b| {
-                    a.0.extend(b.0);
-                    a.1.extend(b.1);
-                    a
+                || Ok((HashMap::new(),HashMap::new())),
+                |a, b| {
+                    let mut a_resolved = a?;
+                    let b_resolved = b?;
+                    a_resolved.0.extend(b_resolved.0);
+                    a_resolved.1.extend(b_resolved.1);
+                    Ok(a_resolved)
                 },
-            ))
+            )?)
     }
 
-    fn load_card_frames(assets_path: &str, meshes: &HashMap<String, Mesh>) -> Result<HashMap<String, Texture>> {
+    fn load_card_frames(assets_path: &str, meshes: &HashMap<String, Mesh>) -> Result<HashMap<String, RenderTexture>> {
         // TODO: merge with card assets map
-        let gameobjects = UnpackDef::new(&[assets_path, "/gameobjects*.unity3d"].join(""), vec!["Texture2D".to_string()]);
-        let shared = UnpackDef::new(&[assets_path, "/shared*.unity3d"].join(""), vec!["Texture2D".to_string()]);
+        let gameobjects = UnpackDef::new(&[assets_path, "/gameobjects*.unity3d"].join(""), vec!["Texture2D".to_string()])?;
+        let shared = UnpackDef::new(&[assets_path, "/shared*.unity3d"].join(""), vec!["Texture2D".to_string()])?;
         let mut textures = object_hash(&gameobjects);
         textures.extend(object_hash(&shared));
 
@@ -447,7 +490,7 @@ impl Assets {
             res.insert(
                 format!("{:?}_{:?}", CardType::Spell, CardClass::Mage),
                 //FRAME_SPELL_MAGE,
-                builder::build_frame(&textures, &meshes, &CardClass::Mage, &CardType::Spell)?,
+                builder::build_card_frame(&textures, &meshes, &CardClass::Mage, &CardType::Spell)?,
             );
         }
         
@@ -465,7 +508,7 @@ impl Assets {
 
     fn load_fonts(assets_path: &str) -> Result<HashMap<String, Font>> {
         
-        let shared = UnpackDef::new(&[assets_path, "/shared*.unity3d"].join(""), vec!["Font".to_string()]);
+        let shared = UnpackDef::new(&[assets_path, "/shared*.unity3d"].join(""), vec!["Font".to_string()])?;
         let fonts = object_hash(&shared);
 
         let mut res = HashMap::new();
@@ -479,10 +522,12 @@ impl Assets {
     }
 
     fn load_meshes(assets_path: &str) -> Result<HashMap<String, Mesh>> {
-        let actors = UnpackDef::new(&[assets_path, "/actors*.unity3d"].join(""), vec!["Mesh".to_string()]);
+        let actors = UnpackDef::new(&[assets_path, "/actors*.unity3d"].join(""), vec!["Mesh".to_string()])?;
         let meshes = object_hash(&actors);
 
-        let meshes_to_keep = vec!["InHand_Ability_Base_mesh".to_string(), "InHand_Ability_Description_mesh".to_string()];
+        let meshes_to_keep = vec!["InHand_Ability_Base_mesh".to_string(),
+        "InHand_Ability_Description_mesh".to_string(),
+        "InHand_Ability_RarityFrame_mesh".to_string()];
         
         let mut res = HashMap::new();
         for keep in meshes_to_keep {
@@ -494,7 +539,7 @@ impl Assets {
         Ok(res)
     }
 
-    pub fn get_card_frame(&self, card_type: &CardType, card_class: &CardClass) -> Result<&Texture> {
+    pub fn get_card_frame(&self, card_type: &CardType, card_class: &CardClass, rarity: &CardRarity) -> Result<&RenderTexture> {
         let key = format!("{:?}_{:?}", card_type, card_class);
         Ok(match self.card_frames
             .get(&key)
@@ -525,7 +570,18 @@ impl Assets {
 
     pub fn get_card_portraits(&self, card_id: &str) -> Result<Texture2D> {
         let path = self.portraits.0.get(card_id).ok_or(Error::CardNotFoundError)?;
-        let oplocator = self.portraits.1.get(path).ok_or(Error::CardNotFoundError)?;
+        
+        // final/hs5-033_d.psd:2e354fb03897c45439cdc526c73ee2a1
+        let oplocator;
+        if !self.portraits.1.contains_key(path) && path.contains(":") {
+            let basename: Vec<&str> = Path::new(path).file_name().ok_or(Error::CardNotFoundError)?
+            .to_str().ok_or(Error::CardNotFoundError)?.split(":").collect();
+            oplocator = self.portraits.1.get(&basename.get(0).ok_or(Error::CardNotFoundError)?.to_string()).ok_or(Error::CardNotFoundError)?;
+        } else {
+            oplocator = self.portraits.1.get(path).ok_or(Error::CardNotFoundError)?;
+        }
+        
+        //let oplocator = self.portraits.1.get(path).ok_or(Error::CardNotFoundError)?;
         
         let engine_object = match oplocator.resolve()? {
             ObjectValue::EngineObject(engine_object) => engine_object,

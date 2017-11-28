@@ -20,7 +20,7 @@ rayon = "0.8.2" # parallel iterators
 [dependencies]
 unitypack = { git = "https://github.com/ifeherva/UnityPackRust" }
 #unitypack = { path = "../UnityPackRust/UnityPack/" }
-sfml = "0.12.0" # image processing lib
+sfml = "0.14.0" # image processing lib
 glob = "0.2.11" # list file system with pattern
 heapsize = "0.4.1" # get heapsize of objects (debug)
 rayon = "0.8.2" # parallel iterators

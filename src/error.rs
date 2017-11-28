@@ -1,8 +1,9 @@
 use std::result;
 use unitypack;
-use glob::GlobError;
+use glob::{GlobError, PatternError};
 use serde_json;
 use std::io;
+use std::num;
 
 #[derive(Debug)]
 pub enum Error {
@@ -16,6 +17,7 @@ pub enum Error {
     ObjectTypeError,
     SFMLError,
     NotImplementedError(String),
+    InternalError,
 }
 
 impl From<unitypack::error::Error> for Error {
@@ -33,6 +35,24 @@ impl From<serde_json::Error> for Error {
 impl From<io::Error> for Error {
     fn from(error: io::Error) -> Error {
         Error::IOError(Box::new(error))
+    }
+}
+
+impl From<num::ParseIntError> for Error {
+    fn from(_: num::ParseIntError) -> Error {
+        Error::InternalError
+    }
+}
+
+impl From<PatternError> for Error {
+    fn from(_: PatternError) -> Error {
+        Error::InternalError
+    }
+}
+
+impl From<GlobError> for Error {
+    fn from(error: GlobError) -> Error {
+        Error::PathError(Box::new(error))
     }
 }
 
