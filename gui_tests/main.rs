@@ -3,6 +3,7 @@ extern crate sfml;
 
 use hscardgen::generator::*;
 use sfml::graphics::Texture;
+use std::env;
 
 fn main() {
     let generator = Generator::new("/Applications/Hearthstone/Data/OSX/").unwrap();
@@ -10,7 +11,9 @@ fn main() {
     //let sprite = Sprite::with_texture(&texture);
 
     let image = texture.copy_to_image().unwrap();
-    image.save_to_file("/Users/istvanfe/Downloads/test.png");
+    let mut path = env::home_dir().unwrap().to_str().unwrap().to_owned();
+    path.push_str("/Downloads/test.png");
+    image.save_to_file(&path);
 
     /*let mut window = RenderWindow::new(
         VideoMode::new(800, 1200, 32),
