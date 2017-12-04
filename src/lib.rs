@@ -4,6 +4,7 @@ extern crate rayon;
 extern crate serde_json;
 extern crate sfml;
 extern crate unitypack;
+extern crate time;
 
 #[macro_use]
 extern crate serde_derive;
@@ -19,10 +20,23 @@ mod resources;
 mod tests {
 
     use generator::*;
+    use std::env;
+    use time::PreciseTime;
 
     #[test]
-    fn it_works() {
+    fn generate_mage_spell() {
+        let start = PreciseTime::now();
         let generator = Generator::new("/Applications/Hearthstone/Data/OSX/").unwrap();
-        generator.generate_card("AT_001").unwrap();
+        let end = PreciseTime::now();
+        println!("Generator loading took {} seconds.", start.to(end));
+
+        let start = PreciseTime::now();
+        let card_image = generator.generate_card("CS2_031").unwrap();
+        let end = PreciseTime::now();
+        println!("Card image generation took {} seconds.", start.to(end));
+
+        let mut path = env::home_dir().unwrap().to_str().unwrap().to_owned();
+        path.push_str("/Downloads/test.png");
+        card_image.save_to_file(&path);
     }
 }
