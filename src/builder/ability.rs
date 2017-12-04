@@ -44,7 +44,8 @@ fn build_card_ability_frame(
     let source_image =
         Image::create_from_pixels(source_width, source_height, &frame_texture.to_image()?)
             .ok_or(Error::SFMLError)?;
-    let texture = Texture::from_image(&source_image).ok_or(Error::SFMLError)?;
+    let mut texture = Texture::from_image(&source_image).ok_or(Error::SFMLError)?;
+    texture.set_smooth(true);
 
     // generate frame mesh
     let mesh = meshes_map
@@ -80,7 +81,8 @@ fn build_card_ability_frame(
     let source_image =
         Image::create_from_pixels(source_width, source_height, &textbox_texture.to_image()?)
             .ok_or(Error::SFMLError)?;
-    let texture = Texture::from_image(&source_image).ok_or(Error::SFMLError)?;
+    let mut texture = Texture::from_image(&source_image).ok_or(Error::SFMLError)?;
+    texture.set_smooth(true);
 
     let mesh = meshes_map
         .get("InHand_Ability_Description_mesh")

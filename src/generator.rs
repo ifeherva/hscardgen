@@ -61,6 +61,7 @@ impl Generator {
         let mut canvas =
             RenderTexture::new(card_size.x, card_size.y, false).ok_or(Error::SFMLError)?;
         canvas.clear(&transparent_color);
+        canvas.set_smooth(true);
 
         // draw card frame
         self.draw_card_frame(&card_type, &card_class, &mut canvas)?;
@@ -73,7 +74,8 @@ impl Generator {
         // draw mana gem
         let mana_gem =
             Image::from_memory(self.assets.get_card_asset("MANA_GEM")?).ok_or(Error::SFMLError)?;
-        let mana_gem_texture = Texture::from_image(&mana_gem).ok_or(Error::SFMLError)?;
+        let mut mana_gem_texture = Texture::from_image(&mana_gem).ok_or(Error::SFMLError)?;
+        mana_gem_texture.set_smooth(true);
         let mut mana_gem_sprite = Sprite::with_texture(&mana_gem_texture);
         mana_gem_sprite.move_(Vector2f::new(24f32, 75f32));
         canvas.draw(&mana_gem_sprite);

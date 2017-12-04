@@ -13,9 +13,12 @@ pub fn build_portrait(portrait_image: &Image, shadow_image: &Image, mesh: &Mesh)
     let white_color = Color::rgb(255, 255, 255);
     let portrait_background = Image::from_color(portrait_image.size().x, portrait_image.size().y, &white_color).ok_or(Error::SFMLError)?;
 
-    let portrait_bg_texture = Texture::from_image(&portrait_background).ok_or(Error::SFMLError)?;
-    let portrait_texture = Texture::from_image(&portrait_image).ok_or(Error::SFMLError)?;
-    let shadow_texture = Texture::from_image(&shadow_image).ok_or(Error::SFMLError)?;
+    let mut portrait_bg_texture = Texture::from_image(&portrait_background).ok_or(Error::SFMLError)?;
+    portrait_bg_texture.set_smooth(true);
+    let mut portrait_texture = Texture::from_image(&portrait_image).ok_or(Error::SFMLError)?;
+    portrait_texture.set_smooth(true);
+    let mut shadow_texture = Texture::from_image(&shadow_image).ok_or(Error::SFMLError)?;
+    shadow_texture.set_smooth(true);
 
     // create canvas
     let portrait_bounds = portrait_vertex_array.bounds();
@@ -70,7 +73,8 @@ pub fn build_portrait_frame(
     mesh: &Mesh,
 ) -> Result<RenderTexture> {
     let frame_vertex_array = create_vertex_array(mesh, 0, 0, frame_image.size().x, frame_image.size().y)?;
-    let frame_image_texture = Texture::from_image(&frame_image).ok_or(Error::SFMLError)?;
+    let mut frame_image_texture = Texture::from_image(&frame_image).ok_or(Error::SFMLError)?;
+    frame_image_texture.set_smooth(true);
 
     let bounds = frame_vertex_array.bounds();
     let mut canvas = RenderTexture::new(
