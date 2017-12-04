@@ -7,7 +7,7 @@ use unitypack::engine::mesh::Mesh;
 use std::io::BufReader;
 use std::usize;
 
-pub fn build_portrait_from_image(portrait_image: &Image, shadow_image: &Image, mesh: &Mesh) -> Result<RenderTexture> {
+pub fn build_portrait(portrait_image: &Image, shadow_image: &Image, mesh: &Mesh) -> Result<RenderTexture> {
     let portrait_vertex_array = create_vertex_array(mesh, 1, 0, portrait_image.size().x, portrait_image.size().y)?;
 
     let white_color = Color::rgb(255, 255, 255);
@@ -62,6 +62,34 @@ pub fn build_portrait_from_image(portrait_image: &Image, shadow_image: &Image, m
     // do the rendering
     canvas.display();
 
+    Ok(canvas)
+}
+
+pub fn build_portrait_frame(
+    frame_image: &Image,
+    mesh: &Mesh,
+) -> Result<RenderTexture> {
+    let frame_vertex_array = create_vertex_array(mesh, 0, 0, frame_image.size().x, frame_image.size().y)?;
+    let frame_image_texture = Texture::from_image(&frame_image).ok_or(Error::SFMLError)?;
+
+    let bounds = frame_vertex_array.bounds();
+    let mut canvas = RenderTexture::new(
+        (bounds.width + 1f32) as u32,
+        (bounds.height + 1f32) as u32,
+        false,
+    ).ok_or(Error::SFMLError)?;
+    canvas.set_smooth(true);
+    let transparent_color = Color::rgba(0, 0, 0, 0);
+    canvas.clear(&transparent_color);
+
+    let render_states = RenderStates::new(
+        BlendMode::default(),
+        Transform::default(),
+        Some(&frame_image_texture),
+        None,
+    );
+    canvas.draw_with_renderstates(&frame_vertex_array, render_states);
+    canvas.display();
     Ok(canvas)
 }
 

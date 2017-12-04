@@ -1,6 +1,7 @@
 use assets::Assets;
 use cards::*;
 use error::{Error, Result};
+use unitypack::engine::texture::IntoTexture2D;
 use sfml::system::{Vector2, Vector2f};
 use sfml::graphics::{Color, Font, Image, IntRect, RenderTarget, RenderTexture, Sprite, Text,
                      TextStyle, Texture, Transformable};
@@ -51,7 +52,7 @@ impl Generator {
 
         let card_class = card.card_class.as_ref().ok_or(Error::InvalidCardError)?;
 
-        let rarity = card.rarity.as_ref().ok_or(Error::InvalidCardError)?;
+        //let rarity = card.rarity.as_ref().ok_or(Error::InvalidCardError)?;
 
         let transparent_color = Color::rgba(0, 0, 0, 0);
         let card_size = Vector2 { x: 764, y: 1100 };
@@ -62,10 +63,12 @@ impl Generator {
         canvas.clear(&transparent_color);
 
         // draw card frame
-        self.draw_card_frame(&card_type, &card_class, rarity, &mut canvas)?;
+        self.draw_card_frame(&card_type, &card_class, &mut canvas)?;
 
         // draw image portrait
         self.draw_card_portrait(card_id, &card_type, &mut canvas)?;
+
+        self.draw_portrait_frame(&card_type, &card_class, &mut canvas)?;
 
         // draw mana gem
         let mana_gem =
@@ -110,10 +113,9 @@ impl Generator {
         &self,
         card_type: &CardType,
         card_class: &CardClass,
-        rarity: &CardRarity,
         canvas: &mut RenderTexture,
     ) -> Result<()> {
-        let card_frame = self.assets.get_card_frame(card_type, card_class, rarity)?;
+        let card_frame = self.assets.get_card_frame(card_type, card_class)?;
         let width = card_frame.size().x;
         let mut frame_sprite = Sprite::with_texture(card_frame.texture());
         frame_sprite.flip_texture();
@@ -137,18 +139,19 @@ impl Generator {
 
         portrait_img.flip_vertically();
 
-        // build portrait with shadow
-        let portrait_texture = builder::build_portrait(&portrait_img, &self.assets.textures, &self.assets.meshes)?;
-        
-        let mut portrait_sprite = Sprite::with_texture(&portrait_texture.texture());
+        match *card_type {
+            CardType::Spell => {
+                // draw portrait with shadow
+                let portrait_texture = builder::build_ability_portrait(&portrait_img, &self.assets.textures, &self.assets.meshes)?;        
+                let mut portrait_sprite = Sprite::with_texture(&portrait_texture.texture());
+                portrait_sprite.set_scale(Vector2f::new(528f32 / width as f32, 528f32 / width as f32));
 
-        // flip image
-        portrait_sprite.set_scale(Vector2f::new(528f32 / width as f32, 528f32 / width as f32));
-
-        let portrait_position = match *card_type {
-            CardType::Spell => Vector2f {
-                x: 130f32,
-                y: 175f32,
+                let portrait_position = Vector2f {
+                    x: 130f32,
+                    y: 175f32,
+                };
+                portrait_sprite.set_position(portrait_position);
+                canvas.draw(&portrait_sprite);
             },
             _ => {
                 return Err(Error::NotImplementedError(
@@ -156,8 +159,49 @@ impl Generator {
                 ));
             }
         };
-        portrait_sprite.set_position(portrait_position);
-        canvas.draw(&portrait_sprite);
+        Ok(())
+    }
+
+    fn draw_portrait_frame(&self,
+        card_type: &CardType,
+        card_class: &CardClass,
+        canvas: &mut RenderTexture,
+    ) -> Result<()>  {
+        match *card_type {
+            CardType::Spell => {
+                let card_frame = match *card_class {
+                    CardClass::Mage => {
+                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Mage")?.to_texture2d()?
+                    }
+                    CardClass::Priest => {
+                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Priest")?.to_texture2d()?
+                    }
+                    _ => {
+                        return Err(Error::NotImplementedError(
+                            format!("Card class {:?} is not yet implemented", card_class),
+                        ));
+                    }
+                };
+                let card_frame_image = Image::create_from_pixels(card_frame.width, card_frame.height, &card_frame.to_image()?)
+                .ok_or(Error::SFMLError)?;
+                let portrait_frame_texture = builder::build_ability_portrait_frame(&card_frame_image, &self.assets.meshes)?;
+
+                let mut portrait_frame_sprite = Sprite::with_texture(&portrait_frame_texture.texture());
+                portrait_frame_sprite.flip_texture();
+                portrait_frame_sprite.set_scale(Vector2f::new(675f32 / 338f32, 675f32 / 338f32));
+                let portrait_frame_sprite_position = Vector2f {
+                    x: 100f32,
+                    y: 147f32,
+                };
+                portrait_frame_sprite.set_position(portrait_frame_sprite_position);
+                canvas.draw(&portrait_frame_sprite);
+            },
+            _ => {
+                return Err(Error::NotImplementedError(
+                    format!("Card type {:?} is not yet implemented", card_type),
+                ));
+            }
+        };
         Ok(())
     }
 }

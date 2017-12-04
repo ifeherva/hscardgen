@@ -547,7 +547,7 @@ impl Assets {
         Ok(res)
     }
 
-    pub fn get_card_frame(&self, card_type: &CardType, card_class: &CardClass, rarity: &CardRarity) -> Result<&RenderTexture> {
+    pub fn get_card_frame(&self, card_type: &CardType, card_class: &CardClass) -> Result<&RenderTexture> {
         let key = format!("{:?}_{:?}", card_type, card_class);
         Ok(match self.card_frames
             .get(&key)
