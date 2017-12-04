@@ -2,8 +2,9 @@ use assets::Assets;
 use cards::*;
 use error::{Error, Result};
 use sfml::system::{Vector2, Vector2f};
-use sfml::graphics::{Color, Font, Image, IntRect, RenderTarget, RenderTexture, Sprite,
-                     Text, TextStyle, Texture, Transformable};
+use sfml::graphics::{Color, Font, Image, IntRect, RenderTarget, RenderTexture, Sprite, Text,
+                     TextStyle, Texture, Transformable};
+use builder;
 
 const FONT_BELWE: &'static str = "Belwe";
 const FONT_BELWE_OUTLINE: &'static str = "Belwe_Outline";
@@ -47,7 +48,7 @@ impl Generator {
                 return Err(Error::InvalidCardError);
             }
         };
-        
+
         let card_class = card.card_class.as_ref().ok_or(Error::InvalidCardError)?;
 
         let rarity = card.rarity.as_ref().ok_or(Error::InvalidCardError)?;
@@ -60,11 +61,11 @@ impl Generator {
             RenderTexture::new(card_size.x, card_size.y, false).ok_or(Error::SFMLError)?;
         canvas.clear(&transparent_color);
 
-        // draw image portrait
-        self.draw_card_portrait(card_id, &card_type, &mut canvas)?;
-
         // draw card frame
         self.draw_card_frame(&card_type, &card_class, rarity, &mut canvas)?;
+
+        // draw image portrait
+        self.draw_card_portrait(card_id, &card_type, &mut canvas)?;
 
         // draw mana gem
         let mana_gem =
@@ -86,7 +87,10 @@ impl Generator {
                 mana_text.set_style(TextStyle::BOLD);
                 mana_text.set_outline_color(&Color::BLACK);
                 mana_text.set_outline_thickness(4f32);
-                mana_text.scale(Vector2f::new(1f32 + belwe_raw.pixel_scale, 1f32 + belwe_raw.pixel_scale));
+                mana_text.scale(Vector2f::new(
+                    1f32 + belwe_raw.pixel_scale,
+                    1f32 + belwe_raw.pixel_scale,
+                ));
                 let bounds = mana_text.global_bounds();
                 mana_text.set_position(Vector2f::new(
                     center.x - (bounds.width / 2f32) - bounds.left,
@@ -125,22 +129,26 @@ impl Generator {
         card_type: &CardType,
         canvas: &mut RenderTexture,
     ) -> Result<()> {
-        let portrait = self.assets.get_card_portraits(card_id)?;
+        let portrait = self.assets.get_card_portrait(card_id)?;
         let width = portrait.width;
         let height = portrait.height;
-        let portrait_img = Image::create_from_pixels(width, height, &portrait.to_image()?)
+        let mut portrait_img = Image::create_from_pixels(width, height, &portrait.to_image()?)
             .ok_or(Error::SFMLError)?;
-        let portrait_texture = Texture::from_image(&portrait_img).ok_or(Error::SFMLError)?;
-        let mut portrait_sprite = Sprite::with_texture(&portrait_texture);
+
+        portrait_img.flip_vertically();
+
+        // build portrait with shadow
+        let portrait_texture = builder::build_portrait(&portrait_img, &self.assets.textures, &self.assets.meshes)?;
+        
+        let mut portrait_sprite = Sprite::with_texture(&portrait_texture.texture());
 
         // flip image
-        portrait_sprite.flip_texture();
-        portrait_sprite.set_scale(Vector2f::new(529f32 / width as f32, 529f32 / width as f32));
+        portrait_sprite.set_scale(Vector2f::new(528f32 / width as f32, 528f32 / width as f32));
 
         let portrait_position = match *card_type {
             CardType::Spell => Vector2f {
-                x: 123f32,
-                y: 123f32,
+                x: 130f32,
+                y: 175f32,
             },
             _ => {
                 return Err(Error::NotImplementedError(

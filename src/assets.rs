@@ -8,7 +8,7 @@ use unitypack::engine::EngineObject;
 use unitypack::engine::mesh::{Mesh, IntoMesh};
 use unitypack::asset::Asset;
 use unitypack::assetbundle::Signature;
-use sfml::graphics::{Texture, RenderTexture};
+use sfml::graphics::{RenderTexture};
 use error::{Error, Result};
 use cards::*;
 use std::collections::HashMap;
@@ -21,10 +21,11 @@ use std::path::Path;
 /// Stores graphic elements to construct cards
 pub struct Assets {
     portraits: (HashMap<String, String>, HashMap<String, ObjectLocator>), // cards, textures
+    pub textures: HashMap<String, String>,
     card_frames: HashMap<String, RenderTexture>,
     card_assets: HashMap<String, &'static [u8]>,
     fonts: HashMap<String, Font>,
-    meshes: HashMap<String, Mesh>,
+    pub meshes: HashMap<String, Mesh>,
 }
 
 struct ObjectLocator {
@@ -410,13 +411,15 @@ impl Assets {
         // generate asset catalog
         let meshes = Assets::load_meshes(assets_path)?;
         let portraits = Assets::load_portraits(assets_path)?;
-        let card_frames = Assets::load_card_frames(assets_path, &meshes)?;
+        let textures = Assets::load_textures(assets_path)?;
+        let card_frames = Assets::load_card_frames(&textures, &meshes)?;
         let card_assets = Assets::load_card_assets();
         let fonts = Assets::load_fonts(assets_path)?;
         
 
         Ok(Assets {
             portraits: portraits,
+            textures: textures,
             card_frames: card_frames,
             card_assets: card_assets,
             fonts: fonts,
@@ -477,12 +480,16 @@ impl Assets {
             )?)
     }
 
-    fn load_card_frames(assets_path: &str, meshes: &HashMap<String, Mesh>) -> Result<HashMap<String, RenderTexture>> {
-        // TODO: merge with card assets map
+    fn load_textures(assets_path: &str) -> Result<HashMap<String, String>> {
         let gameobjects = UnpackDef::new(&[assets_path, "/gameobjects*.unity3d"].join(""), vec!["Texture2D".to_string()])?;
         let shared = UnpackDef::new(&[assets_path, "/shared*.unity3d"].join(""), vec!["Texture2D".to_string()])?;
         let mut textures = object_hash(&gameobjects);
         textures.extend(object_hash(&shared));
+        Ok(textures)
+    }
+
+    fn load_card_frames(textures: &HashMap<String, String>, meshes: &HashMap<String, Mesh>) -> Result<HashMap<String, RenderTexture>> {
+        
 
         let mut res = HashMap::new();
 
@@ -490,7 +497,7 @@ impl Assets {
             res.insert(
                 format!("{:?}_{:?}", CardType::Spell, CardClass::Mage),
                 //FRAME_SPELL_MAGE,
-                builder::build_card_frame(&textures, &meshes, &CardClass::Mage, &CardType::Spell)?,
+                builder::build_card_frame(textures, &meshes, &CardClass::Mage, &CardType::Spell)?,
             );
         }
         
@@ -527,7 +534,8 @@ impl Assets {
 
         let meshes_to_keep = vec!["InHand_Ability_Base_mesh".to_string(),
         "InHand_Ability_Description_mesh".to_string(),
-        "InHand_Ability_RarityFrame_mesh".to_string()];
+        "InHand_Ability_RarityFrame_mesh".to_string(),
+        "InHand_Ability_Portrait_mesh".to_string()];
         
         let mut res = HashMap::new();
         for keep in meshes_to_keep {
@@ -568,7 +576,7 @@ impl Assets {
         Ok(font)
     }
 
-    pub fn get_card_portraits(&self, card_id: &str) -> Result<Texture2D> {
+    pub fn get_card_portrait(&self, card_id: &str) -> Result<Texture2D> {
         let path = self.portraits.0.get(card_id).ok_or(Error::CardNotFoundError)?;
         
         let oplocator;
