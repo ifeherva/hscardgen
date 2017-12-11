@@ -68,8 +68,10 @@ impl Generator {
 
         // draw image portrait
         self.draw_card_portrait(card_id, &card_type, &mut canvas)?;
-
         self.draw_portrait_frame(&card_type, &card_class, &mut canvas)?;
+
+        // draw name banner
+        self.draw_name_banner(&card_type, &mut canvas)?;
 
         // draw mana gem
         let mana_gem =
@@ -144,9 +146,14 @@ impl Generator {
         match *card_type {
             CardType::Spell => {
                 // draw portrait with shadow
-                let portrait_texture = builder::build_ability_portrait(&portrait_img, &self.assets.textures, &self.assets.meshes)?;        
+                let portrait_texture = builder::build_ability_portrait(
+                    &portrait_img,
+                    &self.assets.textures,
+                    &self.assets.meshes,
+                )?;
                 let mut portrait_sprite = Sprite::with_texture(&portrait_texture.texture());
-                portrait_sprite.set_scale(Vector2f::new(528f32 / width as f32, 528f32 / width as f32));
+                portrait_sprite
+                    .set_scale(Vector2f::new(528f32 / width as f32, 528f32 / width as f32));
 
                 let portrait_position = Vector2f {
                     x: 130f32,
@@ -154,41 +161,51 @@ impl Generator {
                 };
                 portrait_sprite.set_position(portrait_position);
                 canvas.draw(&portrait_sprite);
-            },
+            }
             _ => {
-                return Err(Error::NotImplementedError(
-                    format!("Card type {:?} is not yet implemented", card_type),
-                ));
+                return Err(Error::NotImplementedError(format!(
+                    "Card type {:?} is not yet implemented",
+                    card_type
+                )));
             }
         };
         Ok(())
     }
 
-    fn draw_portrait_frame(&self,
+    fn draw_portrait_frame(
+        &self,
         card_type: &CardType,
         card_class: &CardClass,
         canvas: &mut RenderTexture,
-    ) -> Result<()>  {
+    ) -> Result<()> {
         match *card_type {
             CardType::Spell => {
                 let card_frame = match *card_class {
                     CardClass::Mage => {
-                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Mage")?.to_texture2d()?
+                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Mage")?
+                            .to_texture2d()?
                     }
                     CardClass::Priest => {
-                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Priest")?.to_texture2d()?
+                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Priest")?
+                            .to_texture2d()?
                     }
                     _ => {
-                        return Err(Error::NotImplementedError(
-                            format!("Card class {:?} is not yet implemented", card_class),
-                        ));
+                        return Err(Error::NotImplementedError(format!(
+                            "Card class {:?} is not yet implemented",
+                            card_class
+                        )));
                     }
                 };
-                let card_frame_image = Image::create_from_pixels(card_frame.width, card_frame.height, &card_frame.to_image()?)
-                .ok_or(Error::SFMLError)?;
-                let portrait_frame_texture = builder::build_ability_portrait_frame(&card_frame_image, &self.assets.meshes)?;
+                let card_frame_image = Image::create_from_pixels(
+                    card_frame.width,
+                    card_frame.height,
+                    &card_frame.to_image()?,
+                ).ok_or(Error::SFMLError)?;
+                let portrait_frame_texture =
+                    builder::build_ability_portrait_frame(&card_frame_image, &self.assets.meshes)?;
 
-                let mut portrait_frame_sprite = Sprite::with_texture(&portrait_frame_texture.texture());
+                let mut portrait_frame_sprite =
+                    Sprite::with_texture(&portrait_frame_texture.texture());
                 portrait_frame_sprite.flip_texture();
                 portrait_frame_sprite.set_scale(Vector2f::new(675f32 / 338f32, 675f32 / 338f32));
                 let portrait_frame_sprite_position = Vector2f {
@@ -197,11 +214,37 @@ impl Generator {
                 };
                 portrait_frame_sprite.set_position(portrait_frame_sprite_position);
                 canvas.draw(&portrait_frame_sprite);
-            },
+            }
             _ => {
-                return Err(Error::NotImplementedError(
-                    format!("Card type {:?} is not yet implemented", card_type),
-                ));
+                return Err(Error::NotImplementedError(format!(
+                    "Card type {:?} is not yet implemented",
+                    card_type
+                )));
+            }
+        };
+        Ok(())
+    }
+
+    fn draw_name_banner(&self, card_type: &CardType, canvas: &mut RenderTexture) -> Result<()> {
+        match *card_type {
+            CardType::Spell => {
+                let banner_texture =
+                    builder::build_ability_name_banner(&self.assets.textures, &self.assets.meshes)?;
+                let mut banner_sprite = Sprite::with_texture(&banner_texture.texture());
+                banner_sprite.flip_texture();
+                banner_sprite.set_scale(Vector2f::new(675f32 / 338f32, 675f32 / 338f32));
+                let portrait_frame_sprite_position = Vector2f {
+                    x: 100f32,
+                    y: 147f32,
+                };
+                banner_sprite.set_position(portrait_frame_sprite_position);
+                canvas.draw(&banner_sprite);
+            }
+            _ => {
+                return Err(Error::NotImplementedError(format!(
+                    "Card type {:?} is not yet implemented",
+                    card_type
+                )));
             }
         };
         Ok(())

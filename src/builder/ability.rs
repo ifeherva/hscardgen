@@ -1,7 +1,7 @@
 use unitypack::engine::texture::{IntoTexture2D, Texture2D};
 use std::collections::HashMap;
-use sfml::graphics::{BlendMode, Color, Image, RenderStates, RenderTarget,
-                     RenderTexture, Texture, Transform};
+use sfml::graphics::{BlendMode, Color, Image, RenderStates, RenderTarget, RenderTexture, Texture,
+                     Transform};
 use cards::CardClass;
 use error::{Error, Result};
 use unitypack::engine::mesh::Mesh;
@@ -21,9 +21,10 @@ pub fn build_ability_frame_for_class(
             Assets::catalog_get(&texture_map, "Card_Inhand_Ability_Priest")?.to_texture2d()?
         }
         _ => {
-            return Err(Error::NotImplementedError(
-                format!("Card class {:?} is not implemented", card_class),
-            ));
+            return Err(Error::NotImplementedError(format!(
+                "Card class {:?} is not implemented",
+                card_class
+            )));
         }
     };
     let textbox_texture =
@@ -50,9 +51,9 @@ fn build_card_ability_frame(
     // generate frame mesh
     let mesh = meshes_map
         .get("InHand_Ability_Base_mesh")
-        .ok_or(Error::AssetNotFoundError(
-            format!("Cannot find InHand_Ability_Base_mesh"),
-        ))?;
+        .ok_or(Error::AssetNotFoundError(format!(
+            "Cannot find InHand_Ability_Base_mesh"
+        )))?;
 
     let vertex_array = create_vertex_array(mesh, 0, 0, source_width, source_height)?;
 
@@ -84,11 +85,9 @@ fn build_card_ability_frame(
     let mut texture = Texture::from_image(&source_image).ok_or(Error::SFMLError)?;
     texture.set_smooth(true);
 
-    let mesh = meshes_map
-        .get("InHand_Ability_Description_mesh")
-        .ok_or(Error::AssetNotFoundError(
-            format!("Cannot find InHand_Ability_Description_mesh"),
-        ))?;
+    let mesh = meshes_map.get("InHand_Ability_Description_mesh").ok_or(
+        Error::AssetNotFoundError(format!("Cannot find InHand_Ability_Description_mesh")),
+    )?;
 
     let vertex_array = create_vertex_array(mesh, 0, 0, source_width, source_height)?;
     let bounds = vertex_array.bounds();
@@ -121,9 +120,9 @@ fn build_card_ability_frame(
 */
 
     canvas.display();
-    //let result = canvas.texture();
 
     // DEBUG DRAW
+    //let result = canvas.texture();
     //let img = result.copy_to_image().ok_or(Error::SFMLError)?;
     //img.save_to_file("/Users/istvanfe/Downloads/test2.png");
     // END DEBUG

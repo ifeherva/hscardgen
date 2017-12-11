@@ -2,8 +2,7 @@ use std::result;
 use unitypack;
 use glob::{GlobError, PatternError};
 use serde_json;
-use std::io;
-use std::num;
+use std::{io, num};
 
 #[derive(Debug)]
 pub enum Error {
