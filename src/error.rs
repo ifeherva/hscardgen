@@ -12,6 +12,7 @@ pub enum Error {
     IOError(Box<io::Error>),
     CardNotFoundError,
     AssetNotFoundError(String),
+    InvalidAssetError(String),
     InvalidCardError,
     ObjectTypeError,
     SFMLError,

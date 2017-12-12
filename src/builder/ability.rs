@@ -22,15 +22,13 @@ pub fn build_ability_frame_for_class(
         }
         _ => {
             return Err(Error::NotImplementedError(format!(
-                "Card class {:?} is not implemented",
+                "Card frame generation for class {:?} is not implemented",
                 card_class
             )));
         }
     };
     let textbox_texture =
         Assets::catalog_get(&texture_map, "Card_InHand_BannerAtlas")?.to_texture2d()?;
-    let gembox_texture =
-        Assets::catalog_get(&texture_map, "Card_Inhand_Ability_Warlock")?.to_texture2d()?;
     build_card_ability_frame(frame_texture, textbox_texture, meshes_map)
 }
 
