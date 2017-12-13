@@ -49,9 +49,9 @@ fn build_card_ability_frame(
     // generate frame mesh
     let mesh = meshes_map
         .get("InHand_Ability_Base_mesh")
-        .ok_or(Error::AssetNotFoundError(
-            format!("Cannot find InHand_Ability_Base_mesh"),
-        ))?;
+        .ok_or(Error::AssetNotFoundError(format!(
+            "Cannot find InHand_Ability_Base_mesh"
+        )))?;
 
     let vertex_array = create_vertex_array(mesh, 0, 0, source_width, source_height)?;
 
@@ -84,51 +84,26 @@ fn build_card_ability_frame(
     let mut texture = Texture::from_image(&source_image).ok_or(Error::SFMLError)?;
     texture.set_smooth(true);
 
-    let mesh = meshes_map
-        .get("InHand_Ability_Description_mesh")
-        .ok_or(Error::AssetNotFoundError(
-            format!("Cannot find InHand_Ability_Description_mesh"),
-        ))?;
+    let mesh = meshes_map.get("InHand_Ability_Description_mesh").ok_or(
+        Error::AssetNotFoundError(format!("Cannot find InHand_Ability_Description_mesh")),
+    )?;
 
     let vertex_array = create_vertex_array(mesh, 0, 0, source_width, source_height)?;
     let bounds = vertex_array.bounds();
     let mut transform = Transform::default();
 
-    let translate_aspect_factor = source_width as f32/ 1024f32;
-    transform.translate(82f32 * translate_aspect_factor, 76f32 * translate_aspect_factor); // 41 , 38
-    transform.scale(508f32 * translate_aspect_factor / bounds.width, 508f32 * translate_aspect_factor / bounds.width); // 254
+    let translate_aspect_factor = source_width as f32 / 1024f32;
+    transform.translate(
+        82f32 * translate_aspect_factor,
+        76f32 * translate_aspect_factor,
+    ); // 41 , 38
+    transform.scale(
+        508f32 * translate_aspect_factor / bounds.width,
+        508f32 * translate_aspect_factor / bounds.width,
+    ); // 254
 
     let render_states = RenderStates::new(BlendMode::default(), transform, Some(&texture), None);
     canvas.draw_with_renderstates(&vertex_array, render_states);
-
-    // draw gem socket
-    /*let source_width = gembox_texture.width;
-    let source_height = gembox_texture.height;
-    let source_image =
-        Image::create_from_pixels(source_width, source_height, &gembox_texture.to_image()?)
-            .ok_or(Error::SFMLError)?;
-    let texture = Texture::from_image(&source_image).ok_or(Error::SFMLError)?;
-
-    let mesh = meshes_map
-        .get("InHand_Ability_RarityFrame_mesh")
-        .ok_or(Error::AssetNotFoundError(
-            format!("Cannot find InHand_Ability_RarityFrame_mesh"),
-        ))?;
-
-    let vertex_array = create_vertex_array(mesh, 0, source_width, source_height, 249)?;
-    let mut transform = Transform::default();
-    transform.translate(131f32, 183f32);
-    let render_states = RenderStates::new(BlendMode::default(), transform, Some(&texture), None);
-    canvas.draw_with_renderstates(&vertex_array, render_states);
-*/
-
-    // DEBUG DRAW
-    /*{
-    let result = canvas.texture();
-    let img = result.copy_to_image().ok_or(Error::SFMLError)?;
-    img.save_to_file("/Users/istvanfe/Downloads/test2.png");
-    }*/
-    // END DEBUG
 
     canvas.display();
     Ok(canvas)

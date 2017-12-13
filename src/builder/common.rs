@@ -109,12 +109,16 @@ pub fn build_portrait_frame(frame_image: &Image, mesh: &Mesh) -> Result<RenderTe
     Ok(canvas)
 }
 
-pub fn build_ability_name_banner(banner_image: &Image, mesh: &Mesh, width: usize) -> Result<RenderTexture> {
+pub fn build_ability_name_banner(
+    banner_image: &Image,
+    mesh: &Mesh,
+    width: usize,
+) -> Result<RenderTexture> {
     let frame_vertex_array = create_vertex_array_(
         mesh,
         0,
         0,
-        3,
+        3, // texcoord channel
         banner_image.size().x,
         banner_image.size().y,
         width,
@@ -153,6 +157,49 @@ pub fn build_ability_name_banner(banner_image: &Image, mesh: &Mesh, width: usize
     Ok(canvas)
 }
 
+pub fn build_rarity_socket(
+    socket_image: &Image,
+    mesh: &Mesh,
+    width: usize,
+) -> Result<RenderTexture> {
+    let frame_vertex_array = create_vertex_array_(
+        mesh,
+        0,
+        0,
+        3, // texcoord channel
+        socket_image.size().x,
+        socket_image.size().y,
+        width,
+        true,
+    )?;
+
+    let mut banner_image_texture = Texture::from_image(&socket_image).ok_or(Error::SFMLError)?;
+    banner_image_texture.set_smooth(true);
+
+    let bounds = frame_vertex_array.bounds();
+    let mut canvas = RenderTexture::new(
+        (bounds.width.ceil()) as u32,
+        (bounds.height.ceil()) as u32,
+        false,
+    ).ok_or(Error::SFMLError)?;
+    canvas.set_smooth(true);
+    let transparent_color = Color::rgba(0, 0, 0, 0);
+    canvas.clear(&transparent_color);
+
+    let render_states = RenderStates::new(
+        BlendMode::default(),
+        Transform::default(),
+        Some(&banner_image_texture),
+        None,
+    );
+    canvas.draw_with_renderstates(&frame_vertex_array, render_states);
+    canvas.display();
+
+    Ok(canvas)
+}
+
+// Utility functions
+// -----------------
 struct Vertex3D {
     coord_x: f32,
     coord_y: f32,
@@ -203,13 +250,13 @@ struct Triangle {
     vertices: [Vertex3D; 3],
     pub min_coord_x: f32,
     pub min_coord_y: f32,
-    pub min_coord_z: f32,
     pub max_coord_x: f32,
+    pub max_coord_z: f32,
 }
 
 impl Triangle {
     fn new(first: Vertex3D, second: Vertex3D, third: Vertex3D) -> Triangle {
-        let min_coord_z = third.coord_z.min(first.coord_z.min(second.coord_z));
+        let max_coord_z = third.coord_z.max(first.coord_z.max(second.coord_z));
         let min_coord_x = third.coord_x.min(first.coord_x.min(second.coord_x));
         let min_coord_y = third.coord_y.min(first.coord_y.min(second.coord_y));
         let max_coord_x = third.coord_x.max(first.coord_x.max(second.coord_x));
@@ -217,8 +264,8 @@ impl Triangle {
             vertices: [first, second, third],
             min_coord_x: min_coord_x,
             min_coord_y: min_coord_y,
-            min_coord_z: min_coord_z,
             max_coord_x: max_coord_x,
+            max_coord_z: max_coord_z,
         }
     }
 }
@@ -282,9 +329,10 @@ pub fn create_vertex_array_(
 ) -> Result<VertexArray> {
     let submesh = mesh.submeshes
         .get(submesh_idx)
-        .ok_or(Error::AssetNotFoundError(
-            format!("Submesh {} not found", submesh_idx),
-        ))?;
+        .ok_or(Error::AssetNotFoundError(format!(
+            "Submesh {} not found",
+            submesh_idx
+        )))?;
 
     // size of data per vertex
     let vertex_data_size = mesh.vertex_data.data.len() / mesh.vertex_data.vertex_count as usize;
@@ -309,9 +357,9 @@ pub fn create_vertex_array_(
         .to_u8()? as usize * 4;
 
     if submesh.index_count % 3 != 0 {
-        return Err(Error::InvalidAssetError(
-            format!("Invalid vertex count for mesh"),
-        ));
+        return Err(Error::InvalidAssetError(format!(
+            "Invalid vertex count for mesh"
+        )));
     }
     let triangle_count = (submesh.index_count / 3) as usize;
 
@@ -333,7 +381,7 @@ pub fn create_vertex_array_(
     }
 
     if sort_by_z {
-        triangles.sort_by(|a, b| a.min_coord_z.partial_cmp(&b.min_coord_z).unwrap());
+        triangles.sort_by(|a, b| a.max_coord_z.partial_cmp(&b.max_coord_z).unwrap());
     }
 
     // compute texcoord offsets
@@ -384,9 +432,10 @@ pub fn create_vertex_array(
 
     let submesh = mesh.submeshes
         .get(submesh_idx)
-        .ok_or(Error::AssetNotFoundError(
-            format!("Submesh {} not found", submesh_idx),
-        ))?;
+        .ok_or(Error::AssetNotFoundError(format!(
+            "Submesh {} not found",
+            submesh_idx
+        )))?;
 
     let vertex_data_size = mesh.vertex_data.data.len() / mesh.vertex_data.vertex_count as usize;
     let mut texcoord_offset = 24;

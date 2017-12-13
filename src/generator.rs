@@ -74,6 +74,19 @@ impl Generator {
         self.draw_card_portrait(card_id, &card_type, &mut canvas)?;
         self.draw_portrait_frame(&card_type, &card_class, &mut canvas)?;
 
+        // draw rarity gem
+        match card.rarity {
+            Some(ref rarity) => {
+                match rarity {
+                    &CardRarity::FREE => {}
+                    _ => {
+                        self.draw_rarity_gem(rarity, &mut canvas, 1.0f32)?;
+                    }
+                };
+            }
+            None => {}
+        };
+
         // draw name banner
         self.draw_name_banner(&card_type, &mut canvas, 1.0f32)?;
 
@@ -132,7 +145,7 @@ impl Generator {
 
         let card_frame = self.assets.get_card_frame(card_type, card_class)?; // 676x957 fixed atm
         let mut frame_sprite = Sprite::with_texture(card_frame.texture());
-        frame_sprite.flip_texture();
+        frame_sprite.flip_horizontally();
 
         // frame sprite accordingly
         let card_frame_real_width = canvas_width as f32 / 1.13;
@@ -220,7 +233,7 @@ impl Generator {
                     builder::build_ability_portrait_frame(&card_frame_image, &self.assets.meshes)?;
                 let mut portrait_frame_sprite =
                     Sprite::with_texture(&portrait_frame_texture.texture());
-                portrait_frame_sprite.flip_texture();
+                portrait_frame_sprite.flip_horizontally();
 
                 let aspect_factor = card_frame_image.size().x as f32 / 1024f32;
 
@@ -259,7 +272,7 @@ impl Generator {
 
                 banner_sprite.set_position(Vector2f {
                     x: 65f32 * scaling_factor,
-                    y: 538f32 * scaling_factor,
+                    y: 530f32 * scaling_factor,
                 });
                 canvas.draw(&banner_sprite);
             }
@@ -272,20 +285,51 @@ impl Generator {
         };
         Ok(())
     }
+
+    fn draw_rarity_gem(
+        &self,
+        rarity: &CardRarity,
+        canvas: &mut RenderTexture,
+        scaling_factor: f32,
+    ) -> Result<()> {
+        // draw socket
+        let rarity_gem_socket =
+            builder::build_rarity_gem_socket(&self.assets.textures, &self.assets.meshes, 137)?;
+        let mut rarity_gem_socket_sprite = Sprite::with_texture(&rarity_gem_socket.texture());
+        rarity_gem_socket_sprite.flip_vertically();
+        rarity_gem_socket_sprite.set_position(Vector2f {
+            x: 319f32 * scaling_factor,
+            y: 635f32 * scaling_factor,
+        });
+        canvas.draw(&rarity_gem_socket_sprite);
+
+        // draw gem
+        Ok(())
+    }
 }
 
 trait SpriteTransforms {
-    fn flip_texture(&mut self);
+    fn flip_horizontally(&mut self);
+    fn flip_vertically(&mut self);
 }
 
 impl<'s> SpriteTransforms for Sprite<'s> {
-    fn flip_texture(&mut self) {
+    fn flip_horizontally(&mut self) {
         let texture_rect = self.texture_rect();
         self.set_texture_rect(&IntRect::new(
             0,
             texture_rect.height,
             texture_rect.width,
             -1 * texture_rect.height,
+        ));
+    }
+    fn flip_vertically(&mut self) {
+        let texture_rect = self.texture_rect();
+        self.set_texture_rect(&IntRect::new(
+            texture_rect.width,
+            0,
+            -1 * texture_rect.width,
+            texture_rect.height,
         ));
     }
 }
