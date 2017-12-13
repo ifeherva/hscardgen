@@ -3,11 +3,17 @@ mod ability;
 
 use error::{Error, Result};
 use std::collections::HashMap;
-use sfml::graphics::{Image, RenderTexture};
+use sfml::graphics::{Color , Image, RenderTexture};
 use unitypack::engine::mesh::Mesh;
 use unitypack::engine::texture::IntoTexture2D;
 use cards::{CardClass, CardType};
 use assets::Assets;
+
+lazy_static! {
+    pub static ref TRANSPARENT_COLOR: Color = {
+        Color::rgba(0, 0, 0, 0)
+    };
+}
 
 pub fn build_card_frame(
     texture_map: &HashMap<String, String>,
@@ -19,10 +25,9 @@ pub fn build_card_frame(
         CardType::Spell | CardType::Enchantment => {
             ability::build_ability_frame_for_class(texture_map, meshes_map, card_class)
         }
-        _ => Err(Error::NotImplementedError(format!(
-            "Card type {:?} is not implemented",
-            card_type
-        ))),
+        _ => Err(Error::NotImplementedError(
+            format!("Card type {:?} is not implemented", card_type),
+        )),
     }
 }
 

@@ -49,17 +49,18 @@ fn build_card_ability_frame(
     // generate frame mesh
     let mesh = meshes_map
         .get("InHand_Ability_Base_mesh")
-        .ok_or(Error::AssetNotFoundError(format!(
-            "Cannot find InHand_Ability_Base_mesh"
-        )))?;
+        .ok_or(Error::AssetNotFoundError(
+            format!("Cannot find InHand_Ability_Base_mesh"),
+        ))?;
 
     let vertex_array = create_vertex_array(mesh, 0, 0, source_width, source_height)?;
 
     // create canvas
     let bounds = vertex_array.bounds();
+
     let mut canvas = RenderTexture::new(
-        (bounds.width + 1f32) as u32,
-        (bounds.height + 1f32) as u32,
+        (bounds.width.ceil()) as u32,
+        (bounds.height.ceil()) as u32,
         false,
     ).ok_or(Error::SFMLError)?;
     canvas.set_smooth(true);
@@ -83,9 +84,11 @@ fn build_card_ability_frame(
     let mut texture = Texture::from_image(&source_image).ok_or(Error::SFMLError)?;
     texture.set_smooth(true);
 
-    let mesh = meshes_map.get("InHand_Ability_Description_mesh").ok_or(
-        Error::AssetNotFoundError(format!("Cannot find InHand_Ability_Description_mesh")),
-    )?;
+    let mesh = meshes_map
+        .get("InHand_Ability_Description_mesh")
+        .ok_or(Error::AssetNotFoundError(
+            format!("Cannot find InHand_Ability_Description_mesh"),
+        ))?;
 
     let vertex_array = create_vertex_array(mesh, 0, 0, source_width, source_height)?;
     let bounds = vertex_array.bounds();
@@ -116,14 +119,6 @@ fn build_card_ability_frame(
     let render_states = RenderStates::new(BlendMode::default(), transform, Some(&texture), None);
     canvas.draw_with_renderstates(&vertex_array, render_states);
 */
-
     canvas.display();
-
-    // DEBUG DRAW
-    //let result = canvas.texture();
-    //let img = result.copy_to_image().ok_or(Error::SFMLError)?;
-    //img.save_to_file("/Users/istvanfe/Downloads/test2.png");
-    // END DEBUG
-
     Ok(canvas)
 }

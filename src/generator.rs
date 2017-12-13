@@ -2,7 +2,7 @@ use assets::Assets;
 use cards::*;
 use error::{Error, Result};
 use unitypack::engine::texture::IntoTexture2D;
-use sfml::system::{Vector2, Vector2f};
+use sfml::system::Vector2f;
 use sfml::graphics::{Color, Font, Image, IntRect, RenderTarget, RenderTexture, Sprite, Text,
                      TextStyle, Texture, Transformable};
 use builder;
@@ -28,6 +28,10 @@ impl Generator {
     }
 
     pub fn generate_card(&self, card_id: &str) -> Result<Image> {
+        self.generate_card_with_width(card_id, 764)
+    }
+
+    pub fn generate_card_with_width(&self, card_id: &str, card_width: usize) -> Result<Image> {
         // obtain card data
         let card = match self.card_defs.cards.get(card_id) {
             Some(c) => c,
@@ -53,18 +57,11 @@ impl Generator {
         let card_class = card.card_class.as_ref().ok_or(Error::InvalidCardError)?;
 
         //let rarity = card.rarity.as_ref().ok_or(Error::InvalidCardError)?;
+        //let card_size = Vector2 { x: 764, y: 1100 };
+        let card_aspect_ratio = 764f32 / 1100f32;
 
-        let transparent_color = Color::rgba(0, 0, 0, 0);
-        let card_size = Vector2 { x: 764, y: 1100 };
-
-        // Create transparent canvas
-        let mut canvas =
-            RenderTexture::new(card_size.x, card_size.y, false).ok_or(Error::SFMLError)?;
-        canvas.clear(&transparent_color);
-        canvas.set_smooth(true);
-
-        // draw card frame
-        self.draw_card_frame(&card_type, &card_class, &mut canvas)?;
+        // Generate card frame
+        let mut canvas = self.generate_card_frame(&card_type, &card_class, card_width, (card_width as f32 / card_aspect_ratio).ceil() as usize)?;
 
         // draw image portrait
         self.draw_card_portrait(card_id, &card_type, &mut canvas)?;
@@ -113,20 +110,31 @@ impl Generator {
         Ok(canvas.texture().copy_to_image().ok_or(Error::SFMLError)?)
     }
 
-    fn draw_card_frame(
+    fn generate_card_frame(
         &self,
         card_type: &CardType,
         card_class: &CardClass,
-        canvas: &mut RenderTexture,
-    ) -> Result<()> {
-        let card_frame = self.assets.get_card_frame(card_type, card_class)?;
-        let width = card_frame.size().x;
+        canvas_width: usize, // final canvas width, this is larger than the actual card size
+        canvas_height: usize,
+    ) -> Result<(RenderTexture)> {
+        // Create transparent canvas
+        let mut canvas =
+            RenderTexture::new(canvas_width as u32, canvas_height as u32, false).ok_or(Error::SFMLError)?;
+        canvas.clear(&builder::TRANSPARENT_COLOR);
+        canvas.set_smooth(true);
+
+        let card_frame = self.assets.get_card_frame(card_type, card_class)?; // 676x957 fixed atm
         let mut frame_sprite = Sprite::with_texture(card_frame.texture());
         frame_sprite.flip_texture();
-        frame_sprite.set_scale(Vector2f::new(675f32 / width as f32, 675f32 / width as f32));
-        frame_sprite.set_position(Vector2f::new(53f32, 113f32));
+
+        // frame sprite accordingly
+        let card_frame_real_width = canvas_width as f32 / 1.13;
+        let scale_factor = card_frame_real_width / card_frame.size().x as f32;
+        frame_sprite.set_scale(Vector2f::new(scale_factor, scale_factor));
+        frame_sprite.set_position(Vector2f::new(53f32 * scale_factor, 113f32 * scale_factor));
+        
         canvas.draw(&frame_sprite);
-        Ok(())
+        Ok(canvas)
     }
 
     fn draw_card_portrait(
@@ -163,10 +171,9 @@ impl Generator {
                 canvas.draw(&portrait_sprite);
             }
             _ => {
-                return Err(Error::NotImplementedError(format!(
-                    "Card type {:?} is not yet implemented",
-                    card_type
-                )));
+                return Err(Error::NotImplementedError(
+                    format!("Card type {:?} is not yet implemented", card_type),
+                ));
             }
         };
         Ok(())
@@ -216,10 +223,9 @@ impl Generator {
                 canvas.draw(&portrait_frame_sprite);
             }
             _ => {
-                return Err(Error::NotImplementedError(format!(
-                    "Card type {:?} is not yet implemented",
-                    card_type
-                )));
+                return Err(Error::NotImplementedError(
+                    format!("Card type {:?} is not yet implemented", card_type),
+                ));
             }
         };
         Ok(())
@@ -241,10 +247,9 @@ impl Generator {
                 canvas.draw(&banner_sprite);
             }
             _ => {
-                return Err(Error::NotImplementedError(format!(
-                    "Card type {:?} is not yet implemented",
-                    card_type
-                )));
+                return Err(Error::NotImplementedError(
+                    format!("Card type {:?} is not yet implemented", card_type),
+                ));
             }
         };
         Ok(())

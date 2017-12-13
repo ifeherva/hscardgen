@@ -146,7 +146,6 @@ pub fn build_ability_name_banner(banner_image: &Image, mesh: &Mesh) -> Result<Re
     {
         let result = canvas.texture();
         let img = result.copy_to_image().ok_or(Error::SFMLError)?;
-        img.save_to_file("/Users/Haibane/Downloads/name_banner.png");
         img.save_to_file("/Users/istvanfe/Downloads/name_banner.png");
     }
     // END DEBUG
