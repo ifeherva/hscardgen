@@ -619,7 +619,13 @@ impl Assets {
             &[assets_path, "/actors*.unity3d"].join(""),
             vec!["Mesh".to_string()],
         )?;
-        let meshes = object_hash(&actors);
+        let mut meshes = object_hash(&actors);
+        
+        let shared = UnpackDef::new(
+            &[assets_path, "/shared*.unity3d"].join(""),
+            vec!["Mesh".to_string()],
+        )?;
+        meshes.extend(object_hash(&shared));
 
         let meshes_to_keep = vec![
             "InHand_Ability_Base_mesh".to_string(),
