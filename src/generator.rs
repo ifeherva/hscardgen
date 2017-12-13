@@ -210,14 +210,15 @@ impl Generator {
                 ).ok_or(Error::SFMLError)?;
                 let portrait_frame_texture =
                     builder::build_ability_portrait_frame(&card_frame_image, &self.assets.meshes)?;
-
-                let mut portrait_frame_sprite =
-                    Sprite::with_texture(&portrait_frame_texture.texture());
+                let mut portrait_frame_sprite = Sprite::with_texture(&portrait_frame_texture.texture());
                 portrait_frame_sprite.flip_texture();
-                portrait_frame_sprite.set_scale(Vector2f::new(675f32 / 338f32, 675f32 / 338f32));
+                
+                let aspect_factor = card_frame_image.size().x as f32 / 1024f32;
+
+                portrait_frame_sprite.set_scale(Vector2f::new(aspect_factor, aspect_factor));
                 let portrait_frame_sprite_position = Vector2f {
-                    x: 100f32,
-                    y: 147f32,
+                    x: 99f32 * aspect_factor,
+                    y: 145f32 * aspect_factor,
                 };
                 portrait_frame_sprite.set_position(portrait_frame_sprite_position);
                 canvas.draw(&portrait_frame_sprite);
