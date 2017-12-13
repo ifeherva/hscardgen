@@ -70,6 +70,7 @@ pub fn build_ability_portrait_frame(
 pub fn build_ability_name_banner(
     texture_map: &HashMap<String, String>,
     meshes_map: &HashMap<String, Mesh>,
+    width: usize
 ) -> Result<RenderTexture> {
     let banner_source =
         Assets::catalog_get(texture_map, "Card_InHand_BannerAtlas")?.to_texture2d()?;
@@ -86,5 +87,5 @@ pub fn build_ability_name_banner(
         &banner_source.to_image()?,
     ).ok_or(Error::SFMLError)?;
 
-    common::build_ability_name_banner(&banner_image, mesh)
+    common::build_ability_name_banner(&banner_image, mesh, width)
 }

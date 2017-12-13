@@ -31,7 +31,8 @@ impl Generator {
         self.generate_card_with_width(card_id, 764)
     }
 
-    pub fn generate_card_with_width(&self, card_id: &str, card_width: usize) -> Result<Image> {
+    // This function is supposed to generate cards of arbitary size but not all subfunctions are ready for that yet
+    fn generate_card_with_width(&self, card_id: &str, card_width: usize) -> Result<Image> {
         // obtain card data
         let card = match self.card_defs.cards.get(card_id) {
             Some(c) => c,
@@ -58,17 +59,16 @@ impl Generator {
 
         //let rarity = card.rarity.as_ref().ok_or(Error::InvalidCardError)?;
         //let card_size = Vector2 { x: 764, y: 1100 };
-        let card_aspect_ratio = 764f32 / 1100f32;
-
+        
         // Generate card frame
-        let mut canvas = self.generate_card_frame(&card_type, &card_class, card_width, (card_width as f32 / card_aspect_ratio).ceil() as usize)?;
+        let mut canvas = self.generate_card_frame(&card_type, &card_class, card_width, (card_width as f32 / CARD_ASPECT_RATIO).ceil() as usize)?;
 
         // draw image portrait
         self.draw_card_portrait(card_id, &card_type, &mut canvas)?;
         self.draw_portrait_frame(&card_type, &card_class, &mut canvas)?;
 
         // draw name banner
-        self.draw_name_banner(&card_type, &mut canvas)?;
+        self.draw_name_banner(&card_type, &mut canvas, 1.0f32)?;
 
         // draw mana gem
         let mana_gem =
@@ -232,19 +232,17 @@ impl Generator {
         Ok(())
     }
 
-    fn draw_name_banner(&self, card_type: &CardType, canvas: &mut RenderTexture) -> Result<()> {
+    fn draw_name_banner(&self, card_type: &CardType, canvas: &mut RenderTexture, scaling_factor: f32) -> Result<()> {
         match *card_type {
             CardType::Spell => {
                 let banner_texture =
-                    builder::build_ability_name_banner(&self.assets.textures, &self.assets.meshes)?;
+                    builder::build_ability_name_banner(&self.assets.textures, &self.assets.meshes, (643f32 * scaling_factor).ceil() as usize )?;
                 let mut banner_sprite = Sprite::with_texture(&banner_texture.texture());
-                banner_sprite.flip_texture();
-                banner_sprite.set_scale(Vector2f::new(675f32 / 338f32, 675f32 / 338f32));
-                let portrait_frame_sprite_position = Vector2f {
-                    x: 100f32,
-                    y: 147f32,
-                };
-                banner_sprite.set_position(portrait_frame_sprite_position);
+
+                banner_sprite.set_position(Vector2f {
+                    x: 65f32 * scaling_factor,
+                    y: 538f32 * scaling_factor,
+                });
                 canvas.draw(&banner_sprite);
             }
             _ => {

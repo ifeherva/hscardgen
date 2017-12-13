@@ -109,7 +109,7 @@ pub fn build_portrait_frame(frame_image: &Image, mesh: &Mesh) -> Result<RenderTe
     Ok(canvas)
 }
 
-pub fn build_ability_name_banner(banner_image: &Image, mesh: &Mesh) -> Result<RenderTexture> {
+pub fn build_ability_name_banner(banner_image: &Image, mesh: &Mesh, width: usize) -> Result<RenderTexture> {
     let frame_vertex_array = create_vertex_array_(
         mesh,
         0,
@@ -117,7 +117,7 @@ pub fn build_ability_name_banner(banner_image: &Image, mesh: &Mesh) -> Result<Re
         3,
         banner_image.size().x,
         banner_image.size().y,
-        500,
+        width,
         true,
     )?;
     let mut banner_image_texture = Texture::from_image(&banner_image).ok_or(Error::SFMLError)?;
@@ -125,8 +125,8 @@ pub fn build_ability_name_banner(banner_image: &Image, mesh: &Mesh) -> Result<Re
 
     let bounds = frame_vertex_array.bounds();
     let mut canvas = RenderTexture::new(
-        (bounds.width + 1f32) as u32,
-        (bounds.height + 1f32) as u32,
+        (bounds.width.ceil()) as u32,
+        (bounds.height.ceil()) as u32,
         false,
     ).ok_or(Error::SFMLError)?;
     canvas.set_smooth(true);
@@ -143,13 +143,12 @@ pub fn build_ability_name_banner(banner_image: &Image, mesh: &Mesh) -> Result<Re
     canvas.display();
 
     // DEBUG DRAW
-    {
+    /*{
         let result = canvas.texture();
         let img = result.copy_to_image().ok_or(Error::SFMLError)?;
         img.save_to_file("/Users/istvanfe/Downloads/name_banner.png");
-    }
+    }*/
     // END DEBUG
-
 
     Ok(canvas)
 }
