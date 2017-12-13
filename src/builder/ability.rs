@@ -93,8 +93,10 @@ fn build_card_ability_frame(
     let vertex_array = create_vertex_array(mesh, 0, 0, source_width, source_height)?;
     let bounds = vertex_array.bounds();
     let mut transform = Transform::default();
-    transform.translate(41f32, 38f32);
-    transform.scale(254f32 / bounds.width, 254f32 / bounds.width);
+
+    let translate_aspect_factor = source_width as f32/ 1024f32;
+    transform.translate(82f32 * translate_aspect_factor, 76f32 * translate_aspect_factor); // 41 , 38
+    transform.scale(508f32 * translate_aspect_factor / bounds.width, 508f32 * translate_aspect_factor / bounds.width); // 254
 
     let render_states = RenderStates::new(BlendMode::default(), transform, Some(&texture), None);
     canvas.draw_with_renderstates(&vertex_array, render_states);
@@ -119,6 +121,15 @@ fn build_card_ability_frame(
     let render_states = RenderStates::new(BlendMode::default(), transform, Some(&texture), None);
     canvas.draw_with_renderstates(&vertex_array, render_states);
 */
+
+    // DEBUG DRAW
+    /*{
+    let result = canvas.texture();
+    let img = result.copy_to_image().ok_or(Error::SFMLError)?;
+    img.save_to_file("/Users/istvanfe/Downloads/test2.png");
+    }*/
+    // END DEBUG
+
     canvas.display();
     Ok(canvas)
 }
