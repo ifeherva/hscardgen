@@ -12,6 +12,8 @@ const FONT_BELWE_OUTLINE: &'static str = "Belwe_Outline";
 const FONT_BLIZZARDGLOBAL: &'static str = "BlizzardGlobal";
 const FONT_FRANKLINGOTHIC: &'static str = "FranklinGothic";
 
+const CARD_ASPECT_RATIO: f32 = 764f32 / 1100f32;
+
 pub struct Generator {
     assets: Assets,
     card_defs: CardDb,
@@ -59,9 +61,14 @@ impl Generator {
 
         //let rarity = card.rarity.as_ref().ok_or(Error::InvalidCardError)?;
         //let card_size = Vector2 { x: 764, y: 1100 };
-        
+
         // Generate card frame
-        let mut canvas = self.generate_card_frame(&card_type, &card_class, card_width, (card_width as f32 / CARD_ASPECT_RATIO).ceil() as usize)?;
+        let mut canvas = self.generate_card_frame(
+            &card_type,
+            &card_class,
+            card_width,
+            (card_width as f32 / CARD_ASPECT_RATIO).ceil() as usize,
+        )?;
 
         // draw image portrait
         self.draw_card_portrait(card_id, &card_type, &mut canvas)?;
@@ -118,8 +125,8 @@ impl Generator {
         canvas_height: usize,
     ) -> Result<(RenderTexture)> {
         // Create transparent canvas
-        let mut canvas =
-            RenderTexture::new(canvas_width as u32, canvas_height as u32, false).ok_or(Error::SFMLError)?;
+        let mut canvas = RenderTexture::new(canvas_width as u32, canvas_height as u32, false)
+            .ok_or(Error::SFMLError)?;
         canvas.clear(&builder::TRANSPARENT_COLOR);
         canvas.set_smooth(true);
 
@@ -132,7 +139,7 @@ impl Generator {
         let scale_factor = card_frame_real_width / card_frame.size().x as f32;
         frame_sprite.set_scale(Vector2f::new(scale_factor, scale_factor));
         frame_sprite.set_position(Vector2f::new(53f32 * scale_factor, 113f32 * scale_factor));
-        
+
         canvas.draw(&frame_sprite);
         Ok(canvas)
     }
@@ -171,9 +178,10 @@ impl Generator {
                 canvas.draw(&portrait_sprite);
             }
             _ => {
-                return Err(Error::NotImplementedError(
-                    format!("Card type {:?} is not yet implemented", card_type),
-                ));
+                return Err(Error::NotImplementedError(format!(
+                    "Card type {:?} is not yet implemented",
+                    card_type
+                )));
             }
         };
         Ok(())
@@ -210,9 +218,10 @@ impl Generator {
                 ).ok_or(Error::SFMLError)?;
                 let portrait_frame_texture =
                     builder::build_ability_portrait_frame(&card_frame_image, &self.assets.meshes)?;
-                let mut portrait_frame_sprite = Sprite::with_texture(&portrait_frame_texture.texture());
+                let mut portrait_frame_sprite =
+                    Sprite::with_texture(&portrait_frame_texture.texture());
                 portrait_frame_sprite.flip_texture();
-                
+
                 let aspect_factor = card_frame_image.size().x as f32 / 1024f32;
 
                 portrait_frame_sprite.set_scale(Vector2f::new(aspect_factor, aspect_factor));
@@ -224,19 +233,28 @@ impl Generator {
                 canvas.draw(&portrait_frame_sprite);
             }
             _ => {
-                return Err(Error::NotImplementedError(
-                    format!("Card type {:?} is not yet implemented", card_type),
-                ));
+                return Err(Error::NotImplementedError(format!(
+                    "Card type {:?} is not yet implemented",
+                    card_type
+                )));
             }
         };
         Ok(())
     }
 
-    fn draw_name_banner(&self, card_type: &CardType, canvas: &mut RenderTexture, scaling_factor: f32) -> Result<()> {
+    fn draw_name_banner(
+        &self,
+        card_type: &CardType,
+        canvas: &mut RenderTexture,
+        scaling_factor: f32,
+    ) -> Result<()> {
         match *card_type {
             CardType::Spell => {
-                let banner_texture =
-                    builder::build_ability_name_banner(&self.assets.textures, &self.assets.meshes, (643f32 * scaling_factor).ceil() as usize )?;
+                let banner_texture = builder::build_ability_name_banner(
+                    &self.assets.textures,
+                    &self.assets.meshes,
+                    (643f32 * scaling_factor).ceil() as usize,
+                )?;
                 let mut banner_sprite = Sprite::with_texture(&banner_texture.texture());
 
                 banner_sprite.set_position(Vector2f {
@@ -246,9 +264,10 @@ impl Generator {
                 canvas.draw(&banner_sprite);
             }
             _ => {
-                return Err(Error::NotImplementedError(
-                    format!("Card type {:?} is not yet implemented", card_type),
-                ));
+                return Err(Error::NotImplementedError(format!(
+                    "Card type {:?} is not yet implemented",
+                    card_type
+                )));
             }
         };
         Ok(())
