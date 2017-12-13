@@ -146,14 +146,6 @@ pub fn build_ability_name_banner(
     canvas.draw_with_renderstates(&frame_vertex_array, render_states);
     canvas.display();
 
-    // DEBUG DRAW
-    /*{
-        let result = canvas.texture();
-        let img = result.copy_to_image().ok_or(Error::SFMLError)?;
-        img.save_to_file("/Users/istvanfe/Downloads/name_banner.png");
-    }*/
-    // END DEBUG
-
     Ok(canvas)
 }
 
@@ -162,7 +154,7 @@ pub fn build_rarity_socket(
     mesh: &Mesh,
     width: usize,
 ) -> Result<RenderTexture> {
-    let frame_vertex_array = create_vertex_array_(
+    let vertex_array = create_vertex_array_(
         mesh,
         0,
         0,
@@ -173,10 +165,10 @@ pub fn build_rarity_socket(
         true,
     )?;
 
-    let mut banner_image_texture = Texture::from_image(&socket_image).ok_or(Error::SFMLError)?;
-    banner_image_texture.set_smooth(true);
+    let mut rarity_socket_texture = Texture::from_image(&socket_image).ok_or(Error::SFMLError)?;
+    rarity_socket_texture.set_smooth(true);
 
-    let bounds = frame_vertex_array.bounds();
+    let bounds = vertex_array.bounds();
     let mut canvas = RenderTexture::new(
         (bounds.width.ceil()) as u32,
         (bounds.height.ceil()) as u32,
@@ -189,10 +181,56 @@ pub fn build_rarity_socket(
     let render_states = RenderStates::new(
         BlendMode::default(),
         Transform::default(),
-        Some(&banner_image_texture),
+        Some(&rarity_socket_texture),
         None,
     );
-    canvas.draw_with_renderstates(&frame_vertex_array, render_states);
+    canvas.draw_with_renderstates(&vertex_array, render_states);
+    canvas.display();
+
+    // DEBUG DRAW
+    {
+        let result = canvas.texture();
+        let img = result.copy_to_image().ok_or(Error::SFMLError)?;
+        img.save_to_file("/Users/Haibane/Downloads/gem.png");
+    }
+    // END DEBUG
+
+    Ok(canvas)
+}
+
+pub fn build_rarity_gem(gem_image: &Image, mesh: &Mesh, width: usize) -> Result<RenderTexture> {
+    let vertex_array = create_vertex_array_(
+        mesh,
+        0,
+        0,
+        3, // texcoord channel
+        gem_image.size().x,
+        gem_image.size().y,
+        width,
+        true,
+    )?;
+
+    let mut gem_texture = Texture::from_image(&gem_image).ok_or(Error::SFMLError)?;
+    gem_texture.set_smooth(true);
+
+    let bounds = vertex_array.bounds();
+
+    let mut canvas = RenderTexture::new(
+        (bounds.width.ceil()) as u32,
+        (bounds.height.ceil()) as u32,
+        false,
+    ).ok_or(Error::SFMLError)?;
+    canvas.set_smooth(true);
+    let transparent_color = Color::rgba(0, 0, 0, 0);
+    canvas.clear(&transparent_color);
+
+    let render_states = RenderStates::new(
+        BlendMode::default(),
+        Transform::default(),
+        Some(&gem_texture),
+        None,
+    );
+    canvas.draw_with_renderstates(&vertex_array, render_states);
     canvas.display();
 
     Ok(canvas)

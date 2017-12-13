@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use sfml::graphics::{Color, Image, RenderTexture};
 use unitypack::engine::mesh::Mesh;
 use unitypack::engine::texture::IntoTexture2D;
-use cards::{CardClass, CardType};
+use cards::{CardClass, CardRarity, CardType};
 use assets::Assets;
 
 lazy_static! {
@@ -96,17 +96,37 @@ pub fn build_rarity_gem_socket(
     meshes_map: &HashMap<String, Mesh>,
     width: usize,
 ) -> Result<RenderTexture> {
-    let textbox_texture =
-        Assets::catalog_get(texture_map, "Card_Inhand_Ability_Warlock")?.to_texture2d()?;
+    let texture = Assets::catalog_get(texture_map, "Card_Inhand_Ability_Warlock")?.to_texture2d()?;
     let mesh = meshes_map.get("InHand_Ability_RarityFrame_mesh").ok_or(
         Error::AssetNotFoundError(format!("Cannot find InHand_Ability_RarityFrame_mesh")),
     )?;
 
-    let gem_socket_image = Image::create_from_pixels(
-        textbox_texture.width,
-        textbox_texture.height,
-        &textbox_texture.to_image()?,
-    ).ok_or(Error::SFMLError)?;
+    let gem_socket_image =
+        Image::create_from_pixels(texture.width, texture.height, &texture.to_image()?)
+            .ok_or(Error::SFMLError)?;
 
     common::build_rarity_socket(&gem_socket_image, mesh, width)
+}
+
+pub fn build_rarity_gem(
+    texture_map: &HashMap<String, String>,
+    meshes_map: &HashMap<String, Mesh>,
+    rarity: &CardRarity,
+    width: usize,
+) -> Result<RenderTexture> {
+    let gem_texture = Assets::catalog_get(texture_map, "RarityGems")?.to_texture2d()?;
+    let shader_texture = Assets::catalog_get(texture_map, "clouds3")?.to_texture2d()?;
+    let mesh = meshes_map
+        .get("RarityGem_mesh")
+        .ok_or(Error::AssetNotFoundError(format!(
+            "Cannot find RarityGem_mesh"
+        )))?;
+
+    let gem_image = Image::create_from_pixels(
+        gem_texture.width,
+        gem_texture.height,
+        &gem_texture.to_image()?,
+    ).ok_or(Error::SFMLError)?;
+
+    common::build_rarity_gem(&gem_image, mesh, width)
 }

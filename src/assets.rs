@@ -627,6 +627,7 @@ impl Assets {
             "InHand_Ability_Description_mesh".to_string(),
             "InHand_Ability_RarityFrame_mesh".to_string(),
             "InHand_Ability_Portrait_mesh".to_string(),
+            "RarityGem_mesh".to_string(),
         ];
 
         let mut res = HashMap::new();

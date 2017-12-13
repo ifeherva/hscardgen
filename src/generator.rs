@@ -304,6 +304,9 @@ impl Generator {
         canvas.draw(&rarity_gem_socket_sprite);
 
         // draw gem
+        let rarity_gem =
+            builder::build_rarity_gem(&self.assets.textures, &self.assets.meshes, rarity, 137)?;
+
         Ok(())
     }
 }
