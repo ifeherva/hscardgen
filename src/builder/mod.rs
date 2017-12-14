@@ -128,5 +128,11 @@ pub fn build_rarity_gem(
         &gem_texture.to_image()?,
     ).ok_or(Error::SFMLError)?;
 
-    common::build_rarity_gem(&gem_image, mesh, width)
+    let shader_image = Image::create_from_pixels(
+        shader_texture.width,
+        shader_texture.height,
+        &shader_texture.to_image()?,
+    ).ok_or(Error::SFMLError)?;
+
+    common::build_rarity_gem(&gem_image, &shader_image, mesh, width)
 }

@@ -187,18 +187,10 @@ pub fn build_rarity_socket(
     canvas.draw_with_renderstates(&vertex_array, render_states);
     canvas.display();
 
-    // DEBUG DRAW
-    {
-        let result = canvas.texture();
-        let img = result.copy_to_image().ok_or(Error::SFMLError)?;
-        img.save_to_file("/Users/Haibane/Downloads/gem.png");
-    }
-    // END DEBUG
-
     Ok(canvas)
 }
 
-pub fn build_rarity_gem(gem_image: &Image, mesh: &Mesh, width: usize) -> Result<RenderTexture> {
+pub fn build_rarity_gem(gem_image: &Image, shader_image: &Image, mesh: &Mesh, width: usize) -> Result<RenderTexture> {
     let vertex_array = create_vertex_array_(
         mesh,
         0,
@@ -213,6 +205,9 @@ pub fn build_rarity_gem(gem_image: &Image, mesh: &Mesh, width: usize) -> Result<
     let mut gem_texture = Texture::from_image(&gem_image).ok_or(Error::SFMLError)?;
     gem_texture.set_smooth(true);
 
+    let mut shader_texture = Texture::from_image(&shader_image).ok_or(Error::SFMLError)?;
+    shader_texture.set_smooth(true);
+
     let bounds = vertex_array.bounds();
 
     let mut canvas = RenderTexture::new(
@@ -224,14 +219,41 @@ pub fn build_rarity_gem(gem_image: &Image, mesh: &Mesh, width: usize) -> Result<
     let transparent_color = Color::rgba(0, 0, 0, 0);
     canvas.clear(&transparent_color);
 
+    let shader_vertex_array = create_vertex_array_(
+        mesh,
+        0,
+        0,
+        3, // texcoord channel
+        shader_image.size().x,
+        shader_image.size().y,
+        width,
+        true,
+    )?;
+    let shader_render_states = RenderStates::new(
+        BlendMode::default(),//MULTIPLY,
+        Transform::default(),
+        Some(&shader_texture),
+        None,
+    );
+    canvas.draw_with_renderstates(&shader_vertex_array, shader_render_states);
+
     let render_states = RenderStates::new(
-        BlendMode::default(),
+        BlendMode::MULTIPLY,//default(),
         Transform::default(),
         Some(&gem_texture),
         None,
     );
     canvas.draw_with_renderstates(&vertex_array, render_states);
+
     canvas.display();
+
+    // DEBUG DRAW
+    {
+        let result = canvas.texture();
+        let img = result.copy_to_image().ok_or(Error::SFMLError)?;
+        img.save_to_file("/Users/istvanfe/Downloads/gem.png");
+    }
+    // END DEBUG
 
     Ok(canvas)
 }
