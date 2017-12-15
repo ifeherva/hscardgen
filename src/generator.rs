@@ -125,6 +125,9 @@ impl Generator {
             None => {}
         };
 
+        // draw card's name
+        self.draw_card_name(card_name, &mut canvas);
+
         // render off screen
         canvas.display();
         Ok(canvas.texture().copy_to_image().ok_or(Error::SFMLError)?)
@@ -314,6 +317,10 @@ impl Generator {
         });
         canvas.draw(&rarity_gem_sprite);
         Ok(())
+    }
+
+    fn draw_card_name(&self, card_name: &str, canvas: &mut RenderTexture) {
+        // mesh: AbilityCardCurvedText
     }
 }
 
