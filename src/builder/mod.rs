@@ -3,7 +3,8 @@ mod ability;
 
 use error::{Error, Result};
 use std::collections::HashMap;
-use sfml::graphics::{Color, Image, RenderTexture};
+use sfml::graphics::{Sprite, Texture, Color, Image, RenderTexture, Transformable, RenderTarget};
+use sfml::system::Vector2f;
 use unitypack::engine::mesh::Mesh;
 use unitypack::engine::texture::IntoTexture2D;
 use cards::{CardClass, CardRarity, CardType};
@@ -13,6 +14,48 @@ lazy_static! {
     pub static ref TRANSPARENT_COLOR: Color = {
         Color::rgba(0, 0, 0, 0)
     };
+}
+
+trait ImageUtils {
+    fn remove_transparency(&mut self);
+    fn resize(&mut self, width: u32, height: u32) -> Result<Image>;
+}
+
+impl ImageUtils for Image {
+    fn remove_transparency(&mut self) {
+        for x in 0..self.size().x {
+            for y in 0..self.size().y {
+                let mut c = self.pixel_at(x, y);
+                c.a = 255;
+                self.set_pixel(x, y, &c);
+            }
+        }
+    }
+
+    fn resize(&mut self, width: u32, height: u32) -> Result<Image> {
+        let mut texture = Texture::from_image(&self).ok_or(Error::SFMLError)?;
+        texture.set_smooth(true);
+        let mut tmp_sprite = Sprite::with_texture(&texture);
+        let scale = Vector2f {
+            x: width as f32 / tmp_sprite.local_bounds().width,
+            y: height as f32 / tmp_sprite.local_bounds().height,
+        };
+
+        tmp_sprite.set_scale(scale);
+
+        let mut canvas = RenderTexture::new(
+            width,
+            height,
+            false,
+        ).ok_or(Error::SFMLError)?;
+        canvas.set_smooth(true);
+        let transparent_color = Color::rgba(0, 0, 0, 0);
+        canvas.clear(&transparent_color);
+        canvas.draw(&tmp_sprite);
+        canvas.display();
+
+        canvas.texture().copy_to_image().ok_or(Error::SFMLError)
+    }
 }
 
 pub fn build_card_frame(
@@ -116,23 +159,39 @@ pub fn build_rarity_gem(
 ) -> Result<RenderTexture> {
     let gem_texture = Assets::catalog_get(texture_map, "RarityGems")?.to_texture2d()?;
     let shader_texture = Assets::catalog_get(texture_map, "clouds3")?.to_texture2d()?;
+
     let mesh = meshes_map
         .get("RarityGem_mesh")
         .ok_or(Error::AssetNotFoundError(format!(
             "Cannot find RarityGem_mesh"
         )))?;
 
-    let gem_image = Image::create_from_pixels(
+    let mut gem_image = Image::create_from_pixels(
         gem_texture.width,
         gem_texture.height,
         &gem_texture.to_image()?,
     ).ok_or(Error::SFMLError)?;
 
-    let shader_image = Image::create_from_pixels(
+    let mut shader_image = Image::create_from_pixels(
         shader_texture.width,
         shader_texture.height,
         &shader_texture.to_image()?,
     ).ok_or(Error::SFMLError)?;
+
+    shader_image = shader_image.resize(gem_image.size().x, gem_image.size().y)?;
+
+    // remove and transfer transparency
+    // gem_image.remove_transparency();
+    for x in 0..gem_image.size().x {
+        for y in 0..gem_image.size().y {
+            let mut gem_pixel = gem_image.pixel_at(x, y);
+            let mut shader_pixel = shader_image.pixel_at(x, y);
+            shader_pixel.a = gem_pixel.a;
+            gem_pixel.a = 255;
+            gem_image.set_pixel(x, y, &gem_pixel);
+            shader_image.set_pixel(x, y, &shader_pixel);
+        }
+    }
 
     common::build_rarity_gem(&gem_image, &shader_image, mesh, width)
 }

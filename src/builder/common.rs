@@ -205,9 +205,6 @@ pub fn build_rarity_gem(gem_image: &Image, shader_image: &Image, mesh: &Mesh, wi
     let mut gem_texture = Texture::from_image(&gem_image).ok_or(Error::SFMLError)?;
     gem_texture.set_smooth(true);
 
-    let mut shader_texture = Texture::from_image(&shader_image).ok_or(Error::SFMLError)?;
-    shader_texture.set_smooth(true);
-
     let bounds = vertex_array.bounds();
 
     let mut canvas = RenderTexture::new(
@@ -218,6 +215,17 @@ pub fn build_rarity_gem(gem_image: &Image, shader_image: &Image, mesh: &Mesh, wi
     canvas.set_smooth(true);
     let transparent_color = Color::rgba(0, 0, 0, 0);
     canvas.clear(&transparent_color);
+
+    let render_states = RenderStates::new(
+        BlendMode::default(),
+        Transform::default(),
+        Some(&gem_texture),
+        None,
+    );
+    canvas.draw_with_renderstates(&vertex_array, render_states);
+
+    let mut shader_texture = Texture::from_image(&shader_image).ok_or(Error::SFMLError)?;
+    shader_texture.set_smooth(true);
 
     let shader_vertex_array = create_vertex_array_(
         mesh,
@@ -230,29 +238,21 @@ pub fn build_rarity_gem(gem_image: &Image, shader_image: &Image, mesh: &Mesh, wi
         true,
     )?;
     let shader_render_states = RenderStates::new(
-        BlendMode::default(),//MULTIPLY,
+        BlendMode::default(),
         Transform::default(),
         Some(&shader_texture),
         None,
     );
     canvas.draw_with_renderstates(&shader_vertex_array, shader_render_states);
 
-    let render_states = RenderStates::new(
-        BlendMode::MULTIPLY,//default(),
-        Transform::default(),
-        Some(&gem_texture),
-        None,
-    );
-    canvas.draw_with_renderstates(&vertex_array, render_states);
-
     canvas.display();
 
     // DEBUG DRAW
-    {
+    /*{
         let result = canvas.texture();
         let img = result.copy_to_image().ok_or(Error::SFMLError)?;
         img.save_to_file("/Users/istvanfe/Downloads/gem.png");
-    }
+    }*/
     // END DEBUG
 
     Ok(canvas)

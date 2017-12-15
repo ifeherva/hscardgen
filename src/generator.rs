@@ -305,8 +305,14 @@ impl Generator {
 
         // draw gem
         let rarity_gem =
-            builder::build_rarity_gem(&self.assets.textures, &self.assets.meshes, rarity, 137)?;
-
+            builder::build_rarity_gem(&self.assets.textures, &self.assets.meshes, rarity, 61)?;
+        let mut rarity_gem_sprite = Sprite::with_texture(&rarity_gem.texture());
+        rarity_gem_sprite.flip_vertically();
+        rarity_gem_sprite.set_position(Vector2f {
+            x: 360f32 * scaling_factor,
+            y: 658f32 * scaling_factor,
+        });
+        canvas.draw(&rarity_gem_sprite);
         Ok(())
     }
 }
