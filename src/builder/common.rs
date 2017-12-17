@@ -16,16 +16,6 @@ pub fn build_portrait(
     let portrait_vertex_array =
         create_vertex_array(mesh, 1, 0, portrait_image.size().x, portrait_image.size().y)?;
 
-    let white_color = Color::rgb(255, 255, 255);
-    let portrait_background = Image::from_color(
-        portrait_image.size().x,
-        portrait_image.size().y,
-        &white_color,
-    ).ok_or(Error::SFMLError)?;
-
-    let mut portrait_bg_texture =
-        Texture::from_image(&portrait_background).ok_or(Error::SFMLError)?;
-    portrait_bg_texture.set_smooth(true);
     let mut portrait_texture = Texture::from_image(&portrait_image).ok_or(Error::SFMLError)?;
     portrait_texture.set_smooth(true);
     let mut shadow_texture = Texture::from_image(&shadow_image).ok_or(Error::SFMLError)?;
@@ -41,13 +31,6 @@ pub fn build_portrait(
     canvas.set_smooth(true);
     canvas.clear(&TRANSPARENT_COLOR);
 
-    let render_states = RenderStates::new(
-        BlendMode::default(),
-        Transform::default(),
-        Some(&portrait_bg_texture),
-        None,
-    );
-    canvas.draw_with_renderstates(&portrait_vertex_array, render_states);
     let render_states = RenderStates::new(
         BlendMode::default(),
         Transform::default(),

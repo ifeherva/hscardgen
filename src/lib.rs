@@ -11,6 +11,7 @@ extern crate unitypack;
 #[macro_use]
 extern crate serde_derive;
 
+mod utils;
 pub mod error;
 pub mod generator;
 mod builder;

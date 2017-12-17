@@ -6,6 +6,7 @@ use sfml::system::Vector2f;
 use sfml::graphics::{Color, Font, Image, IntRect, RenderTarget, RenderTexture, Sprite, Text,
                      TextStyle, Texture, Transformable};
 use builder;
+use utils::ImageUtils;
 
 const FONT_BELWE: &'static str = "Belwe";
 const FONT_BELWE_OUTLINE: &'static str = "Belwe_Outline";
@@ -175,6 +176,7 @@ impl Generator {
             .ok_or(Error::SFMLError)?;
 
         portrait_img.flip_vertically();
+        portrait_img.remove_transparency();
 
         match *card_type {
             CardType::Spell => {
