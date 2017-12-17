@@ -2,10 +2,11 @@ use error::{Error, Result};
 use sfml::system::Vector2f;
 use byteorder::{LittleEndian, ReadBytesExt};
 use sfml::graphics::{BlendMode, Color, Image, PrimitiveType, RenderStates, RenderTarget,
-                     RenderTexture, Texture, Transform, Vertex, VertexArray};
+                     RenderTexture, Text, Texture, Transform, Transformable, Vertex, VertexArray};
 use unitypack::engine::mesh::Mesh;
 use std::{usize, f32};
 use std::io::BufReader;
+use builder::TRANSPARENT_COLOR;
 
 pub fn build_portrait(
     portrait_image: &Image,
@@ -38,8 +39,7 @@ pub fn build_portrait(
         false,
     ).ok_or(Error::SFMLError)?;
     canvas.set_smooth(true);
-    let transparent_color = Color::rgba(0, 0, 0, 0);
-    canvas.clear(&transparent_color);
+    canvas.clear(&TRANSPARENT_COLOR);
 
     let render_states = RenderStates::new(
         BlendMode::default(),
@@ -95,8 +95,7 @@ pub fn build_portrait_frame(frame_image: &Image, mesh: &Mesh) -> Result<RenderTe
         false,
     ).ok_or(Error::SFMLError)?;
     canvas.set_smooth(true);
-    let transparent_color = Color::rgba(0, 0, 0, 0);
-    canvas.clear(&transparent_color);
+    canvas.clear(&TRANSPARENT_COLOR);
 
     let render_states = RenderStates::new(
         BlendMode::default(),
@@ -134,8 +133,7 @@ pub fn build_ability_name_banner(
         false,
     ).ok_or(Error::SFMLError)?;
     canvas.set_smooth(true);
-    let transparent_color = Color::rgba(0, 0, 0, 0);
-    canvas.clear(&transparent_color);
+    canvas.clear(&TRANSPARENT_COLOR);
 
     let render_states = RenderStates::new(
         BlendMode::default(),
@@ -175,8 +173,7 @@ pub fn build_rarity_socket(
         false,
     ).ok_or(Error::SFMLError)?;
     canvas.set_smooth(true);
-    let transparent_color = Color::rgba(0, 0, 0, 0);
-    canvas.clear(&transparent_color);
+    canvas.clear(&TRANSPARENT_COLOR);
 
     let render_states = RenderStates::new(
         BlendMode::default(),
@@ -190,7 +187,12 @@ pub fn build_rarity_socket(
     Ok(canvas)
 }
 
-pub fn build_rarity_gem(gem_image: &Image, shader_image: &Image, mesh: &Mesh, width: usize) -> Result<RenderTexture> {
+pub fn build_rarity_gem(
+    gem_image: &Image,
+    shader_image: &Image,
+    mesh: &Mesh,
+    width: usize,
+) -> Result<RenderTexture> {
     let vertex_array = create_vertex_array_(
         mesh,
         0,
@@ -213,8 +215,7 @@ pub fn build_rarity_gem(gem_image: &Image, shader_image: &Image, mesh: &Mesh, wi
         false,
     ).ok_or(Error::SFMLError)?;
     canvas.set_smooth(true);
-    let transparent_color = Color::rgba(0, 0, 0, 0);
-    canvas.clear(&transparent_color);
+    canvas.clear(&TRANSPARENT_COLOR);
 
     let render_states = RenderStates::new(
         BlendMode::default(),
@@ -254,6 +255,24 @@ pub fn build_rarity_gem(gem_image: &Image, shader_image: &Image, mesh: &Mesh, wi
         img.save_to_file("/Users/istvanfe/Downloads/gem.png");
     }*/
     // END DEBUG
+
+    Ok(canvas)
+}
+
+pub fn build_name_texture(text: &mut Text) -> Result<RenderTexture> {
+    let center = Vector2f::new(150f32, 22f32);
+    let bounds = text.global_bounds();
+
+    text.set_position(Vector2f::new(
+        center.x - (bounds.width / 2f32),
+        (bounds.top + bounds.height) / 2.0 + 2f32,
+    ));
+    text.set_scale(Vector2f { x: 1f32, y: -1f32 });
+    let mut canvas = RenderTexture::new(300, 44, false).ok_or(Error::SFMLError)?;
+    canvas.set_smooth(true);
+    canvas.clear(&TRANSPARENT_COLOR);
+    canvas.draw(text);
+    canvas.display();
 
     Ok(canvas)
 }

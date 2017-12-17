@@ -1,12 +1,13 @@
 use unitypack::engine::texture::{IntoTexture2D, Texture2D};
 use std::collections::HashMap;
-use sfml::graphics::{BlendMode, Color, Image, RenderStates, RenderTarget, RenderTexture, Texture,
-                     Transform};
+use sfml::graphics::{BlendMode, Image, RenderStates, RenderTarget, RenderTexture, Texture,
+                     TextureRef, Transform};
 use cards::CardClass;
 use error::{Error, Result};
 use unitypack::engine::mesh::Mesh;
 use assets::Assets;
-use builder::common::create_vertex_array;
+use builder::common::{create_vertex_array, create_vertex_array_};
+use builder::TRANSPARENT_COLOR;
 
 pub fn build_ability_frame_for_class(
     texture_map: &HashMap<String, String>,
@@ -64,8 +65,7 @@ fn build_card_ability_frame(
         false,
     ).ok_or(Error::SFMLError)?;
     canvas.set_smooth(true);
-    let transparent_color = Color::rgba(0, 0, 0, 0);
-    canvas.clear(&transparent_color);
+    canvas.clear(&TRANSPARENT_COLOR);
 
     let render_states = RenderStates::new(
         BlendMode::default(),
@@ -106,5 +106,40 @@ fn build_card_ability_frame(
     canvas.draw_with_renderstates(&vertex_array, render_states);
 
     canvas.display();
+    Ok(canvas)
+}
+
+pub fn build_card_name(
+    name_texture: &TextureRef,
+    mesh: &Mesh,
+    width: usize,
+) -> Result<RenderTexture> {
+    let source_width = name_texture.size().x;
+    let source_height = name_texture.size().y;
+
+    let vertex_array =
+        create_vertex_array_(mesh, 0, 0, 3, source_width, source_height, width, false)?;
+
+    // create canvas
+    let bounds = vertex_array.bounds();
+
+    let mut canvas = RenderTexture::new(
+        (bounds.width.ceil()) as u32,
+        (bounds.height.ceil()) as u32,
+        false,
+    ).ok_or(Error::SFMLError)?;
+    canvas.set_smooth(true);
+    canvas.clear(&TRANSPARENT_COLOR);
+
+    let render_states = RenderStates::new(
+        BlendMode::default(),
+        Transform::default(),
+        Some(name_texture),
+        None,
+    );
+    canvas.draw_with_renderstates(&vertex_array, render_states);
+
+    canvas.display();
+
     Ok(canvas)
 }

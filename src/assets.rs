@@ -620,7 +620,7 @@ impl Assets {
             vec!["Mesh".to_string()],
         )?;
         let mut meshes = object_hash(&actors);
-        
+
         let shared = UnpackDef::new(
             &[assets_path, "/shared*.unity3d"].join(""),
             vec!["Mesh".to_string()],
@@ -634,6 +634,7 @@ impl Assets {
             "InHand_Ability_RarityFrame_mesh".to_string(),
             "InHand_Ability_Portrait_mesh".to_string(),
             "RarityGem_mesh".to_string(),
+            "AbilityCardCurvedText".to_string(),
         ];
 
         let mut res = HashMap::new();

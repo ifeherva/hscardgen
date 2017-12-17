@@ -102,31 +102,33 @@ impl Generator {
         let belwe_raw = self.assets.get_font(FONT_BELWE)?;
         let belwe = Font::from_memory(&belwe_raw.data).ok_or(Error::SFMLError)?;
 
+        let mut belwe_text = Text::new("", &belwe, 160);
+        belwe_text.set_style(TextStyle::BOLD);
+        belwe_text.set_outline_color(&Color::BLACK);
+        belwe_text.set_outline_thickness(4f32);
+        belwe_text.scale(Vector2f::new(
+            1f32 + belwe_raw.pixel_scale,
+            1f32 + belwe_raw.pixel_scale,
+        ));
+
         // draw mana cost
         match card.cost {
             Some(cost) => {
                 let center = Vector2f::new(112f32, 161f32);
 
-                let mut mana_text = Text::new(&cost.to_string(), &belwe, 160);
-                mana_text.set_style(TextStyle::BOLD);
-                mana_text.set_outline_color(&Color::BLACK);
-                mana_text.set_outline_thickness(4f32);
-                mana_text.scale(Vector2f::new(
-                    1f32 + belwe_raw.pixel_scale,
-                    1f32 + belwe_raw.pixel_scale,
-                ));
-                let bounds = mana_text.global_bounds();
-                mana_text.set_position(Vector2f::new(
+                belwe_text.set_string(&cost.to_string());
+                let bounds = belwe_text.global_bounds();
+                belwe_text.set_position(Vector2f::new(
                     center.x - (bounds.width / 2f32) - bounds.left,
                     center.y - (bounds.height / 2f32) - bounds.top,
                 ));
-                canvas.draw(&mana_text);
+                canvas.draw(&belwe_text);
             }
             None => {}
         };
 
         // draw card's name
-        self.draw_card_name(card_name, &mut canvas);
+        self.draw_card_name(card_name, &mut belwe_text, &mut canvas, 1.0f32)?;
 
         // render off screen
         canvas.display();
@@ -319,8 +321,24 @@ impl Generator {
         Ok(())
     }
 
-    fn draw_card_name(&self, card_name: &str, canvas: &mut RenderTexture) {
-        // mesh: AbilityCardCurvedText
+    fn draw_card_name(
+        &self,
+        card_name: &str,
+        text: &mut Text,
+        canvas: &mut RenderTexture,
+        scaling_factor: f32,
+    ) -> Result<()> {
+        let name_texture = builder::build_name_texture(card_name, text)?;
+
+        let card_name = builder::build_card_name(name_texture.texture(), &self.assets.meshes, 573)?;
+        let mut card_name_sprite = Sprite::with_texture(&card_name.texture());
+        card_name_sprite.flip_vertically();
+        card_name_sprite.set_position(Vector2f {
+            x: 105f32 * scaling_factor,
+            y: 540f32 * scaling_factor,
+        });
+        canvas.draw(&card_name_sprite);
+        Ok(())
     }
 }
 

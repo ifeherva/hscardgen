@@ -3,7 +3,8 @@ mod ability;
 
 use error::{Error, Result};
 use std::collections::HashMap;
-use sfml::graphics::{Sprite, Texture, Color, Image, RenderTexture, Transformable, RenderTarget};
+use sfml::graphics::{Color, Image, RenderTarget, RenderTexture, Sprite, Text, TextStyle, Texture,
+                     TextureRef, Transformable};
 use sfml::system::Vector2f;
 use unitypack::engine::mesh::Mesh;
 use unitypack::engine::texture::IntoTexture2D;
@@ -43,11 +44,7 @@ impl ImageUtils for Image {
 
         tmp_sprite.set_scale(scale);
 
-        let mut canvas = RenderTexture::new(
-            width,
-            height,
-            false,
-        ).ok_or(Error::SFMLError)?;
+        let mut canvas = RenderTexture::new(width, height, false).ok_or(Error::SFMLError)?;
         canvas.set_smooth(true);
         let transparent_color = Color::rgba(0, 0, 0, 0);
         canvas.clear(&transparent_color);
@@ -194,4 +191,26 @@ pub fn build_rarity_gem(
     }
 
     common::build_rarity_gem(&gem_image, &shader_image, mesh, width)
+}
+
+pub fn build_card_name(
+    name_texture: &TextureRef,
+    meshes_map: &HashMap<String, Mesh>,
+    width: usize,
+) -> Result<RenderTexture> {
+    let mesh = meshes_map
+        .get("AbilityCardCurvedText")
+        .ok_or(Error::AssetNotFoundError(format!(
+            "Cannot find AbilityCardCurvedText"
+        )))?;
+
+    ability::build_card_name(name_texture, mesh, width)
+}
+
+pub fn build_name_texture(card_name: &str, text: &mut Text) -> Result<RenderTexture> {
+    text.set_string(card_name);
+    text.set_style(TextStyle::REGULAR);
+    text.set_character_size(28);
+    text.set_outline_thickness(2f32);
+    common::build_name_texture(text)
 }
