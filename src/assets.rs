@@ -18,13 +18,26 @@ use resources::*;
 use builder;
 use std::path::Path;
 
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub enum Fonts {
+    Belwe,
+    BelweOutline,
+    BlizzardGlobal,
+    FranklinGothic,
+}
+
+const FONT_BELWE: &'static str = "Belwe";
+const FONT_BELWE_OUTLINE: &'static str = "Belwe_Outline";
+const FONT_BLIZZARDGLOBAL: &'static str = "BlizzardGlobal";
+const FONT_FRANKLINGOTHIC: &'static str = "FranklinGothic";
+
 /// Stores graphic elements to construct cards
 pub struct Assets {
     portraits: (HashMap<String, String>, HashMap<String, ObjectLocator>), // cards, textures
     pub textures: HashMap<String, String>,
     card_frames: HashMap<String, RenderTexture>,
     card_assets: HashMap<String, &'static [u8]>,
-    fonts: HashMap<String, Font>,
+    fonts: HashMap<Fonts, Font>,
     pub meshes: HashMap<String, Mesh>,
 }
 
@@ -597,7 +610,7 @@ impl Assets {
         res
     }
 
-    fn load_fonts(assets_path: &str) -> Result<HashMap<String, Font>> {
+    fn load_fonts(assets_path: &str) -> Result<HashMap<Fonts, Font>> {
         let shared = UnpackDef::new(
             &[assets_path, "/shared*.unity3d"].join(""),
             vec!["Font".to_string()],
@@ -608,7 +621,15 @@ impl Assets {
         for key in fonts.keys() {
             let engine_object = Assets::catalog_get(&fonts, key)?;
             let font = engine_object.to_font()?;
-            res.insert(font.object.name.clone(), font);
+            if font.object.name == FONT_BELWE {
+                res.insert(Fonts::Belwe, font);
+            } else if font.object.name == FONT_BELWE_OUTLINE {
+                res.insert(Fonts::BelweOutline, font);
+            } else if font.object.name == FONT_BLIZZARDGLOBAL {
+                res.insert(Fonts::BlizzardGlobal, font);
+            } else if font.object.name == FONT_FRANKLINGOTHIC {
+                res.insert(Fonts::FranklinGothic, font);
+            }
         }
 
         Ok(res)
@@ -670,11 +691,11 @@ impl Assets {
         })
     }
 
-    pub fn get_font(&self, font_name: &str) -> Result<&Font> {
+    pub fn get_font(&self, font_name: &Fonts) -> Result<&Font> {
         let font = self.fonts
             .get(font_name)
             .ok_or(Error::AssetNotFoundError(format!(
-                "Cannot find font named {}",
+                "Cannot find font named {:?}",
                 font_name
             )))?;
 

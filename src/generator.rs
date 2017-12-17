@@ -1,4 +1,4 @@
-use assets::Assets;
+use assets::{Assets, Fonts};
 use cards::*;
 use error::{Error, Result};
 use unitypack::engine::texture::IntoTexture2D;
@@ -7,11 +7,6 @@ use sfml::graphics::{Color, Font, Image, IntRect, RenderTarget, RenderTexture, S
                      TextStyle, Texture, Transformable};
 use builder;
 use utils::ImageUtils;
-
-const FONT_BELWE: &'static str = "Belwe";
-const FONT_BELWE_OUTLINE: &'static str = "Belwe_Outline";
-const FONT_BLIZZARDGLOBAL: &'static str = "BlizzardGlobal";
-const FONT_FRANKLINGOTHIC: &'static str = "FranklinGothic";
 
 const CARD_ASPECT_RATIO: f32 = 764f32 / 1100f32;
 
@@ -100,7 +95,7 @@ impl Generator {
         mana_gem_sprite.move_(Vector2f::new(24f32, 75f32));
         canvas.draw(&mana_gem_sprite);
 
-        let belwe_raw = self.assets.get_font(FONT_BELWE)?;
+        let belwe_raw = self.assets.get_font(&Fonts::Belwe)?;
         let belwe = Font::from_memory(&belwe_raw.data).ok_or(Error::SFMLError)?;
 
         let mut belwe_text = Text::new("", &belwe, 160);
