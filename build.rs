@@ -12,12 +12,9 @@ use std::path::Path;
 static CARDDEF_URL: &'static str = "https://api.hearthstonejson.com/v1/20457/all/cards.json";
 static CARDDEF_PATH: &'static str = "./res/cards.json";
 
-// spells
-static FRAME_SPELL_MAGE_URL: &'static str = "https://raw.githubusercontent.com/HearthSim/Sunwell/master/assets/frame-spell-mage.png";
-static FRAME_SPELL_MAGE_PATH: &'static str = "./res/frame-spell-mage.png";
-
 // assets
-static MANA_GEM_URL: &'static str = "https://raw.githubusercontent.com/HearthSim/Sunwell/master/assets/cost-mana.png";
+static MANA_GEM_URL: &'static str =
+    "https://raw.githubusercontent.com/HearthSim/Sunwell/master/assets/cost-mana.png";
 static MANA_GEM_PATH: &'static str = "./res/cost-mana.png";
 
 struct DlData {
@@ -40,16 +37,13 @@ fn main() {
     let file_list = vec![
         DlData::new("Card definitions", CARDDEF_URL, CARDDEF_PATH),
         DlData::new("Mana gem", MANA_GEM_URL, MANA_GEM_PATH),
-        DlData::new(
-            "Mage spell frame",
-            FRAME_SPELL_MAGE_URL,
-            FRAME_SPELL_MAGE_PATH,
-        ),
     ];
 
     file_list
         .par_iter()
-        .map(|x| { download_resource(x); })
+        .map(|x| {
+            download_resource(x);
+        })
         .count();
 }
 
