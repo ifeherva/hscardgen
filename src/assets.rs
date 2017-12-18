@@ -15,6 +15,7 @@ use std::collections::HashMap;
 use glob::glob;
 use rayon::prelude::*;
 use builder;
+use builder::Builder;
 use std::path::Path;
 
 #[derive(Debug, PartialEq, Eq, Hash)]
@@ -588,12 +589,13 @@ impl Assets {
         meshes: &HashMap<String, Mesh>,
     ) -> Result<HashMap<String, RenderTexture>> {
         let mut res = HashMap::new();
-
+        let builder = Builder::new()?;
         {
+            // TODO: add other classes as well
             res.insert(
                 format!("{:?}_{:?}", CardType::Spell, CardClass::Mage),
-                //FRAME_SPELL_MAGE,
-                builder::build_card_frame(textures, &meshes, &CardClass::Mage, &CardType::Spell)?,
+                builder.build_card_frame(textures, &meshes, &CardClass::Mage, &CardType::Spell)?,
+            );
             );
         }
 

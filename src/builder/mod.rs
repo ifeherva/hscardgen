@@ -3,12 +3,15 @@ mod ability;
 
 use error::{Error, Result};
 use std::collections::HashMap;
-use sfml::graphics::{Color, Image, RenderTexture, Text, TextStyle, TextureRef};
+use sfml::graphics::{Color, Image, RenderTexture, Shader, Text, TextStyle, TextureRef};
 use utils::ImageUtils;
 use unitypack::engine::mesh::Mesh;
 use unitypack::engine::texture::IntoTexture2D;
 use cards::{CardClass, CardRarity, CardType};
 use assets::Assets;
+
+const VERTEX_SHADER_SOURCE: &'static str = include_str!("../../res/vertex_shader.glsl");
+const FRAGMENT_SHADER_SOURCE: &'static str = include_str!("../../res/fragment_shader.glsl");
 
 lazy_static! {
     pub static ref TRANSPARENT_COLOR: Color = {
@@ -16,22 +19,45 @@ lazy_static! {
     };
 }
 
-pub fn build_card_frame(
-    texture_map: &HashMap<String, String>,
-    meshes_map: &HashMap<String, Mesh>,
-    card_class: &CardClass,
-    card_type: &CardType,
-) -> Result<RenderTexture> {
-    match *card_type {
-        CardType::Spell | CardType::Enchantment => {
-            ability::build_ability_frame_for_class(texture_map, meshes_map, card_class)
+pub struct Builder<'a> {
+    shader: Option<Shader<'a>>,
+}
+
+impl<'a> Builder<'a> {
+    pub fn new() -> Result<Builder<'a>> {
+        Ok(Builder {
+            shader: Shader::from_memory(
+                Some(VERTEX_SHADER_SOURCE),
+                None,
+                Some(FRAGMENT_SHADER_SOURCE),
+            ),
+        })
+    }
+
+    pub fn build_card_frame(
+        &self,
+        texture_map: &HashMap<String, String>,
+        meshes_map: &HashMap<String, Mesh>,
+        card_class: &CardClass,
+        card_type: &CardType,
+    ) -> Result<RenderTexture> {
+        match *card_type {
+            CardType::Spell | CardType::Enchantment => ability::build_ability_frame_for_class(
+                texture_map,
+                meshes_map,
+                // do not use the shader as it is currently broken
+                None, // self.shader.as_ref(),
+                card_class,
+            ),
+            _ => Err(Error::NotImplementedError(format!(
+                "Card type {:?} is not implemented",
+                card_type
+            ))),
         }
-        _ => Err(Error::NotImplementedError(format!(
-            "Card type {:?} is not implemented",
-            card_type
-        ))),
     }
 }
+
+
 
 pub fn build_ability_portrait(
     portrait_image: &Image,

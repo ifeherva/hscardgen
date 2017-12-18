@@ -1,6 +1,6 @@
 use unitypack::engine::texture::{IntoTexture2D, Texture2D};
 use std::collections::HashMap;
-use sfml::graphics::{BlendMode, Image, RenderStates, RenderTarget, RenderTexture, Texture,
+use sfml::graphics::{BlendMode, Image, RenderStates, RenderTarget, RenderTexture, Shader, Texture,
                      TextureRef, Transform};
 use cards::CardClass;
 use error::{Error, Result};
@@ -12,6 +12,7 @@ use builder::TRANSPARENT_COLOR;
 pub fn build_ability_frame_for_class(
     texture_map: &HashMap<String, String>,
     meshes_map: &HashMap<String, Mesh>,
+    shader: Option<&Shader>,
     card_class: &CardClass,
 ) -> Result<RenderTexture> {
     let frame_texture = match *card_class {
@@ -30,13 +31,14 @@ pub fn build_ability_frame_for_class(
     };
     let textbox_texture =
         Assets::catalog_get(&texture_map, "Card_InHand_BannerAtlas")?.to_texture2d()?;
-    build_card_ability_frame(frame_texture, textbox_texture, meshes_map)
+    build_card_ability_frame(frame_texture, textbox_texture, meshes_map, shader)
 }
 
 fn build_card_ability_frame(
     frame_texture: Texture2D,
     textbox_texture: Texture2D,
     meshes_map: &HashMap<String, Mesh>,
+    shader: Option<&Shader>,
 ) -> Result<RenderTexture> {
     // generate texture
     let source_width = frame_texture.width;
@@ -71,7 +73,7 @@ fn build_card_ability_frame(
         BlendMode::default(),
         Transform::default(),
         Some(&texture),
-        None,
+        shader,
     );
     canvas.draw_with_renderstates(&vertex_array, render_states);
 
@@ -102,7 +104,7 @@ fn build_card_ability_frame(
         508f32 * translate_aspect_factor / bounds.width,
     ); // 254
 
-    let render_states = RenderStates::new(BlendMode::default(), transform, Some(&texture), None);
+    let render_states = RenderStates::new(BlendMode::default(), transform, Some(&texture), shader);
     canvas.draw_with_renderstates(&vertex_array, render_states);
 
     canvas.display();
