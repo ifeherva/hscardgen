@@ -25,7 +25,7 @@ mod tests {
     use std::env;
     use time::PreciseTime;
 
-    const CARD_ID_ICE_LANCE: &str = "CS2_031";
+    //const CARD_ID_ICE_LANCE: &str = "CS2_031";
     const CARD_ID_ICE_BARRIER: &str = "EX1_289";
 
     #[test]
