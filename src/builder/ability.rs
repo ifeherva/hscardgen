@@ -22,6 +22,27 @@ pub fn build_ability_frame_for_class(
         CardClass::Priest => {
             Assets::catalog_get(&texture_map, "Card_Inhand_Ability_Priest")?.to_texture2d()?
         }
+        CardClass::Warrior => {
+            Assets::catalog_get(&texture_map, "Card_Inhand_Ability_Warrior")?.to_texture2d()?
+        }
+        CardClass::Hunter => {
+            Assets::catalog_get(&texture_map, "Card_Inhand_Ability_Hunter")?.to_texture2d()?
+        }
+        CardClass::Warlock => {
+            Assets::catalog_get(&texture_map, "Card_Inhand_Ability_Warlock")?.to_texture2d()?
+        }
+        CardClass::Paladin => {
+            Assets::catalog_get(&texture_map, "Card_Inhand_Ability_Paladin")?.to_texture2d()?
+        }
+        CardClass::Shaman => {
+            Assets::catalog_get(&texture_map, "Card_Inhand_Ability_Shaman")?.to_texture2d()?
+        }
+        CardClass::Rogue => {
+            Assets::catalog_get(&texture_map, "Card_Inhand_Ability_Rogue")?.to_texture2d()?
+        }
+        CardClass::Druid => {
+            Assets::catalog_get(&texture_map, "Card_Inhand_Ability_Rogue")?.to_texture2d()?
+        }
         _ => {
             return Err(Error::NotImplementedError(format!(
                 "Card frame generation for class {:?} is not implemented",

@@ -10,8 +10,8 @@ use unitypack::engine::texture::IntoTexture2D;
 use cards::{CardClass, CardRarity, CardType};
 use assets::Assets;
 
-const VERTEX_SHADER_SOURCE: &'static str = include_str!("../../res/vertex_shader.glsl");
-const FRAGMENT_SHADER_SOURCE: &'static str = include_str!("../../res/fragment_shader.glsl");
+//const VERTEX_SHADER_SOURCE: &'static str = include_str!("../../res/vertex_shader.glsl");
+//const FRAGMENT_SHADER_SOURCE: &'static str = include_str!("../../res/fragment_shader.glsl");
 
 lazy_static! {
     pub static ref TRANSPARENT_COLOR: Color = {
@@ -26,11 +26,12 @@ pub struct Builder<'a> {
 impl<'a> Builder<'a> {
     pub fn new() -> Result<Builder<'a>> {
         Ok(Builder {
-            shader: Shader::from_memory(
+            shader: None, /*Shader::from_memory(
+                // do not use the shader as it is currently broken
                 Some(VERTEX_SHADER_SOURCE),
                 None,
                 Some(FRAGMENT_SHADER_SOURCE),
-            ),
+            )*/
         })
     }
 
@@ -45,8 +46,7 @@ impl<'a> Builder<'a> {
             CardType::Spell | CardType::Enchantment => ability::build_ability_frame_for_class(
                 texture_map,
                 meshes_map,
-                // do not use the shader as it is currently broken
-                None, // self.shader.as_ref(),
+                self.shader.as_ref(),
                 card_class,
             ),
             _ => Err(Error::NotImplementedError(format!(

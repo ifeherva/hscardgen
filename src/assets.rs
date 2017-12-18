@@ -14,7 +14,6 @@ use cards::*;
 use std::collections::HashMap;
 use glob::glob;
 use rayon::prelude::*;
-use builder;
 use builder::Builder;
 use std::path::Path;
 
@@ -591,11 +590,41 @@ impl Assets {
         let mut res = HashMap::new();
         let builder = Builder::new()?;
         {
-            // TODO: add other classes as well
             res.insert(
                 format!("{:?}_{:?}", CardType::Spell, CardClass::Mage),
                 builder.build_card_frame(textures, &meshes, &CardClass::Mage, &CardType::Spell)?,
             );
+            res.insert(
+                format!("{:?}_{:?}", CardType::Spell, CardClass::Priest),
+                builder.build_card_frame(textures, &meshes, &CardClass::Priest, &CardType::Spell)?,
+            );
+            res.insert(
+                format!("{:?}_{:?}", CardType::Spell, CardClass::Warrior),
+                builder.build_card_frame(textures, &meshes, &CardClass::Warrior, &CardType::Spell)?,
+            );
+            res.insert(
+                format!("{:?}_{:?}", CardType::Spell, CardClass::Hunter),
+                builder.build_card_frame(textures, &meshes, &CardClass::Hunter, &CardType::Spell)?,
+            );
+            res.insert(
+                format!("{:?}_{:?}", CardType::Spell, CardClass::Warlock),
+                builder.build_card_frame(textures, &meshes, &CardClass::Warlock, &CardType::Spell)?,
+            );
+            res.insert(
+                format!("{:?}_{:?}", CardType::Spell, CardClass::Rogue),
+                builder.build_card_frame(textures, &meshes, &CardClass::Rogue, &CardType::Spell)?,
+            );
+            res.insert(
+                format!("{:?}_{:?}", CardType::Spell, CardClass::Druid),
+                builder.build_card_frame(textures, &meshes, &CardClass::Druid, &CardType::Spell)?,
+            );
+            res.insert(
+                format!("{:?}_{:?}", CardType::Spell, CardClass::Paladin),
+                builder.build_card_frame(textures, &meshes, &CardClass::Paladin, &CardType::Spell)?,
+            );
+            res.insert(
+                format!("{:?}_{:?}", CardType::Spell, CardClass::Shaman),
+                builder.build_card_frame(textures, &meshes, &CardClass::Shaman, &CardType::Spell)?,
             );
         }
 
