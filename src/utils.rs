@@ -1,5 +1,6 @@
 use error::{Error, Result};
-use sfml::graphics::{Color, Image, RenderTarget, RenderTexture, Sprite, Texture, Transformable};
+use sfml::graphics::{Color, Image, IntRect, RenderTarget, RenderTexture, Sprite, Texture,
+                     Transformable};
 use sfml::system::Vector2f;
 
 pub trait ImageUtils {
@@ -37,5 +38,31 @@ impl ImageUtils for Image {
         canvas.display();
 
         canvas.texture().copy_to_image().ok_or(Error::SFMLError)
+    }
+}
+
+pub trait SpriteTransforms {
+    fn flip_horizontally(&mut self);
+    fn flip_vertically(&mut self);
+}
+
+impl<'s> SpriteTransforms for Sprite<'s> {
+    fn flip_horizontally(&mut self) {
+        let texture_rect = self.texture_rect();
+        self.set_texture_rect(&IntRect::new(
+            0,
+            texture_rect.height,
+            texture_rect.width,
+            -1 * texture_rect.height,
+        ));
+    }
+    fn flip_vertically(&mut self) {
+        let texture_rect = self.texture_rect();
+        self.set_texture_rect(&IntRect::new(
+            texture_rect.width,
+            0,
+            -1 * texture_rect.width,
+            texture_rect.height,
+        ));
     }
 }

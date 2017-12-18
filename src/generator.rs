@@ -3,10 +3,10 @@ use cards::*;
 use error::{Error, Result};
 use unitypack::engine::texture::IntoTexture2D;
 use sfml::system::Vector2f;
-use sfml::graphics::{Color, Font, Image, IntRect, RenderTarget, RenderTexture, Sprite, Text,
-                     TextStyle, Texture, Transformable};
+use sfml::graphics::{Color, Font, Image, RenderTarget, RenderTexture, Sprite, Text, TextStyle,
+                     Transformable};
 use builder;
-use utils::ImageUtils;
+use utils::{ImageUtils, SpriteTransforms};
 
 const CARD_ASPECT_RATIO: f32 = 764f32 / 1100f32;
 
@@ -87,13 +87,14 @@ impl Generator {
         self.draw_name_banner(&card_type, &mut canvas, 1.0f32)?;
 
         // draw mana gem
-        let mana_gem =
+        self.draw_mana_gem(&mut canvas, 1.0f32)?;
+        /*let mana_gem =
             Image::from_memory(self.assets.get_card_asset("MANA_GEM")?).ok_or(Error::SFMLError)?;
         let mut mana_gem_texture = Texture::from_image(&mana_gem).ok_or(Error::SFMLError)?;
         mana_gem_texture.set_smooth(true);
         let mut mana_gem_sprite = Sprite::with_texture(&mana_gem_texture);
         mana_gem_sprite.move_(Vector2f::new(24f32, 75f32));
-        canvas.draw(&mana_gem_sprite);
+        canvas.draw(&mana_gem_sprite);*/
 
         let belwe_raw = self.assets.get_font(&Fonts::Belwe)?;
         let belwe = Font::from_memory(&belwe_raw.data).ok_or(Error::SFMLError)?;
@@ -288,6 +289,22 @@ impl Generator {
         Ok(())
     }
 
+    fn draw_mana_gem(&self, canvas: &mut RenderTexture, scaling_factor: f32) -> Result<()> {
+        let mana_gem = builder::build_mana_gem(
+            &self.assets.textures,
+            &self.assets.meshes,
+            (173f32 * scaling_factor).ceil() as usize,
+        )?;
+        let mut mana_gem_sprite = Sprite::with_texture(&mana_gem.texture());
+        mana_gem_sprite.flip_horizontally();
+        mana_gem_sprite.move_(Vector2f {
+            x: 24f32 * scaling_factor,
+            y: 75f32 * scaling_factor,
+        });
+        canvas.draw(&mana_gem_sprite);
+        Ok(())
+    }
+
     fn draw_rarity_gem(
         &self,
         rarity: &CardRarity,
@@ -295,8 +312,11 @@ impl Generator {
         scaling_factor: f32,
     ) -> Result<()> {
         // draw socket
-        let rarity_gem_socket =
-            builder::build_rarity_gem_socket(&self.assets.textures, &self.assets.meshes, 137)?;
+        let rarity_gem_socket = builder::build_rarity_gem_socket(
+            &self.assets.textures,
+            &self.assets.meshes,
+            (137f32 * scaling_factor).ceil() as usize,
+        )?;
         let mut rarity_gem_socket_sprite = Sprite::with_texture(&rarity_gem_socket.texture());
         rarity_gem_socket_sprite.flip_vertically();
         rarity_gem_socket_sprite.set_position(Vector2f {
@@ -306,8 +326,12 @@ impl Generator {
         canvas.draw(&rarity_gem_socket_sprite);
 
         // draw gem
-        let rarity_gem =
-            builder::build_rarity_gem(&self.assets.textures, &self.assets.meshes, rarity, 61)?;
+        let rarity_gem = builder::build_rarity_gem(
+            &self.assets.textures,
+            &self.assets.meshes,
+            rarity,
+            (61f32 * scaling_factor).ceil() as usize,
+        )?;
         let mut rarity_gem_sprite = Sprite::with_texture(&rarity_gem.texture());
         rarity_gem_sprite.flip_vertically();
         rarity_gem_sprite.set_position(Vector2f {
@@ -327,7 +351,11 @@ impl Generator {
     ) -> Result<()> {
         let name_texture = builder::build_name_texture(card_name, text)?;
 
-        let card_name = builder::build_card_name(name_texture.texture(), &self.assets.meshes, 573)?;
+        let card_name = builder::build_card_name(
+            name_texture.texture(),
+            &self.assets.meshes,
+            (573f32 * scaling_factor).ceil() as usize,
+        )?;
         let mut card_name_sprite = Sprite::with_texture(&card_name.texture());
         card_name_sprite.flip_vertically();
         card_name_sprite.set_position(Vector2f {
@@ -336,31 +364,5 @@ impl Generator {
         });
         canvas.draw(&card_name_sprite);
         Ok(())
-    }
-}
-
-trait SpriteTransforms {
-    fn flip_horizontally(&mut self);
-    fn flip_vertically(&mut self);
-}
-
-impl<'s> SpriteTransforms for Sprite<'s> {
-    fn flip_horizontally(&mut self) {
-        let texture_rect = self.texture_rect();
-        self.set_texture_rect(&IntRect::new(
-            0,
-            texture_rect.height,
-            texture_rect.width,
-            -1 * texture_rect.height,
-        ));
-    }
-    fn flip_vertically(&mut self) {
-        let texture_rect = self.texture_rect();
-        self.set_texture_rect(&IntRect::new(
-            texture_rect.width,
-            0,
-            -1 * texture_rect.width,
-            texture_rect.height,
-        ));
     }
 }

@@ -17,7 +17,6 @@ pub mod generator;
 mod builder;
 mod assets;
 mod cards;
-mod resources;
 
 #[cfg(test)]
 mod tests {

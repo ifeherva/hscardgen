@@ -92,6 +92,27 @@ pub fn build_ability_name_banner(
     common::build_ability_name_banner(&banner_image, mesh, width)
 }
 
+pub fn build_mana_gem(
+    texture_map: &HashMap<String, String>,
+    meshes_map: &HashMap<String, Mesh>,
+    width: usize,
+) -> Result<RenderTexture> {
+    let mana_gem_texture = Assets::catalog_get(texture_map, "Gem_Mana_D")?.to_texture2d()?;
+
+    let mana_gem_mesh = meshes_map
+        .get("ManaGem")
+        .ok_or(Error::AssetNotFoundError(format!("Cannot find ManaGem")))?;
+
+    let mut mana_gem_image = Image::create_from_pixels(
+        mana_gem_texture.width,
+        mana_gem_texture.height,
+        &mana_gem_texture.to_image()?,
+    ).ok_or(Error::SFMLError)?;
+    mana_gem_image.remove_transparency();
+
+    common::build_mana_gem(&mana_gem_image, mana_gem_mesh, width)
+}
+
 pub fn build_rarity_gem_socket(
     texture_map: &HashMap<String, String>,
     meshes_map: &HashMap<String, Mesh>,

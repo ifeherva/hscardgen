@@ -14,7 +14,6 @@ use cards::*;
 use std::collections::HashMap;
 use glob::glob;
 use rayon::prelude::*;
-use resources::*;
 use builder;
 use std::path::Path;
 
@@ -36,7 +35,6 @@ pub struct Assets {
     portraits: (HashMap<String, String>, HashMap<String, ObjectLocator>), // cards, textures
     pub textures: HashMap<String, String>,
     card_frames: HashMap<String, RenderTexture>,
-    card_assets: HashMap<String, &'static [u8]>,
     fonts: HashMap<Fonts, Font>,
     pub meshes: HashMap<String, Mesh>,
 }
@@ -494,7 +492,6 @@ impl Assets {
         let portraits = Assets::load_portraits(assets_path)?;
         let textures = Assets::load_textures(assets_path)?;
         let card_frames = Assets::load_card_frames(&textures, &meshes)?;
-        let card_assets = Assets::load_card_assets();
         let fonts = Assets::load_fonts(assets_path)?;
 
 
@@ -502,7 +499,6 @@ impl Assets {
             portraits: portraits,
             textures: textures,
             card_frames: card_frames,
-            card_assets: card_assets,
             fonts: fonts,
             meshes: meshes,
         })
@@ -604,12 +600,6 @@ impl Assets {
         Ok(res)
     }
 
-    fn load_card_assets() -> HashMap<String, &'static [u8]> {
-        let mut res = HashMap::new();
-        res.insert(format!("MANA_GEM"), MANA_GEM);
-        res
-    }
-
     fn load_fonts(assets_path: &str) -> Result<HashMap<Fonts, Font>> {
         let shared = UnpackDef::new(
             &[assets_path, "/shared*.unity3d"].join(""),
@@ -656,6 +646,7 @@ impl Assets {
             "InHand_Ability_Portrait_mesh".to_string(),
             "RarityGem_mesh".to_string(),
             "AbilityCardCurvedText".to_string(),
+            "ManaGem".to_string(),
         ];
 
         let mut res = HashMap::new();
@@ -678,15 +669,6 @@ impl Assets {
             Some(k) => k,
             None => {
                 return Err(Error::AssetNotFoundError(format!("Cannot find {}", key)));
-            }
-        })
-    }
-
-    pub fn get_card_asset(&self, asset: &str) -> Result<&[u8]> {
-        Ok(match self.card_assets.get(asset) {
-            Some(k) => k,
-            None => {
-                return Err(Error::AssetNotFoundError(format!("Cannot find {}", asset)));
             }
         })
     }

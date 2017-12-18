@@ -130,6 +130,42 @@ pub fn build_ability_name_banner(
     Ok(canvas)
 }
 
+pub fn build_mana_gem(mana_gem_image: &Image, mesh: &Mesh, width: usize) -> Result<RenderTexture> {
+    let vertex_array = create_vertex_array_(
+        mesh,
+        0,
+        0,
+        3, // texcoord channel
+        mana_gem_image.size().x,
+        mana_gem_image.size().y,
+        width,
+        true,
+    )?;
+
+    let mut mana_gem_texture = Texture::from_image(&mana_gem_image).ok_or(Error::SFMLError)?;
+    mana_gem_texture.set_smooth(true);
+
+    let bounds = vertex_array.bounds();
+    let mut canvas = RenderTexture::new(
+        (bounds.width.ceil()) as u32,
+        (bounds.height.ceil()) as u32,
+        false,
+    ).ok_or(Error::SFMLError)?;
+    canvas.set_smooth(true);
+    canvas.clear(&TRANSPARENT_COLOR);
+
+    let render_states = RenderStates::new(
+        BlendMode::default(),
+        Transform::default(),
+        Some(&mana_gem_texture),
+        None,
+    );
+    canvas.draw_with_renderstates(&vertex_array, render_states);
+    canvas.display();
+
+    Ok(canvas)
+}
+
 pub fn build_rarity_socket(
     socket_image: &Image,
     mesh: &Mesh,
