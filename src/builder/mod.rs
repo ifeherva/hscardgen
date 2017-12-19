@@ -57,8 +57,6 @@ impl<'a> Builder<'a> {
     }
 }
 
-
-
 pub fn build_ability_portrait(
     portrait_image: &Image,
     texture_map: &HashMap<String, String>,

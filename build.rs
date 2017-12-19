@@ -12,11 +12,6 @@ use std::path::Path;
 static CARDDEF_URL: &'static str = "https://api.hearthstonejson.com/v1/20457/all/cards.json";
 static CARDDEF_PATH: &'static str = "./res/cards.json";
 
-// assets
-static MANA_GEM_URL: &'static str =
-    "https://raw.githubusercontent.com/HearthSim/Sunwell/master/assets/cost-mana.png";
-static MANA_GEM_PATH: &'static str = "./res/cost-mana.png";
-
 struct DlData {
     name: &'static str,
     url: &'static str,
@@ -34,10 +29,7 @@ impl DlData {
 }
 
 fn main() {
-    let file_list = vec![
-        DlData::new("Card definitions", CARDDEF_URL, CARDDEF_PATH),
-        DlData::new("Mana gem", MANA_GEM_URL, MANA_GEM_PATH),
-    ];
+    let file_list = vec![DlData::new("Card definitions", CARDDEF_URL, CARDDEF_PATH)];
 
     file_list
         .par_iter()
