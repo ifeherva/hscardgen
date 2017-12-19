@@ -2,6 +2,7 @@ use unitypack::engine::texture::{IntoTexture2D, Texture2D};
 use std::collections::HashMap;
 use sfml::graphics::{BlendMode, Image, RenderStates, RenderTarget, RenderTexture, Shader, Texture,
                      TextureRef, Transform};
+use sfml::system::Vector2u;
 use cards::CardClass;
 use error::{Error, Result};
 use unitypack::engine::mesh::Mesh;
@@ -140,8 +141,17 @@ pub fn build_card_name(
     let source_width = name_texture.size().x;
     let source_height = name_texture.size().y;
 
-    let vertex_array =
-        create_vertex_array_(mesh, 0, 0, 3, source_width, source_height, width, false)?;
+    let vertex_array = create_vertex_array_(
+        mesh,
+        0,
+        0,
+        3,
+        source_width,
+        source_height,
+        width,
+        false,
+        &Vector2u { x: 0, y: 0 },
+    )?;
 
     // create canvas
     let bounds = vertex_array.bounds();

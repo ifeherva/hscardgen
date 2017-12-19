@@ -88,13 +88,6 @@ impl Generator {
 
         // draw mana gem
         self.draw_mana_gem(&mut canvas, 1.0f32)?;
-        /*let mana_gem =
-            Image::from_memory(self.assets.get_card_asset("MANA_GEM")?).ok_or(Error::SFMLError)?;
-        let mut mana_gem_texture = Texture::from_image(&mana_gem).ok_or(Error::SFMLError)?;
-        mana_gem_texture.set_smooth(true);
-        let mut mana_gem_sprite = Sprite::with_texture(&mana_gem_texture);
-        mana_gem_sprite.move_(Vector2f::new(24f32, 75f32));
-        canvas.draw(&mana_gem_sprite);*/
 
         let belwe_raw = self.assets.get_font(&Fonts::Belwe)?;
         let belwe = Font::from_memory(&belwe_raw.data).ok_or(Error::SFMLError)?;

@@ -3,6 +3,7 @@ use sfml::system::Vector2f;
 use byteorder::{LittleEndian, ReadBytesExt};
 use sfml::graphics::{BlendMode, Color, Image, PrimitiveType, RenderStates, RenderTarget,
                      RenderTexture, Text, Texture, Transform, Transformable, Vertex, VertexArray};
+use sfml::system::Vector2u;
 use unitypack::engine::mesh::Mesh;
 use std::{usize, f32};
 use std::io::BufReader;
@@ -105,6 +106,7 @@ pub fn build_ability_name_banner(
         banner_image.size().y,
         width,
         true,
+        &Vector2u { x: 0, y: 0 },
     )?;
     let mut banner_image_texture = Texture::from_image(&banner_image).ok_or(Error::SFMLError)?;
     banner_image_texture.set_smooth(true);
@@ -140,6 +142,7 @@ pub fn build_mana_gem(mana_gem_image: &Image, mesh: &Mesh, width: usize) -> Resu
         mana_gem_image.size().y,
         width,
         true,
+        &Vector2u { x: 0, y: 0 },
     )?;
 
     let mut mana_gem_texture = Texture::from_image(&mana_gem_image).ok_or(Error::SFMLError)?;
@@ -180,6 +183,7 @@ pub fn build_rarity_socket(
         socket_image.size().y,
         width,
         true,
+        &Vector2u { x: 0, y: 0 },
     )?;
 
     let mut rarity_socket_texture = Texture::from_image(&socket_image).ok_or(Error::SFMLError)?;
@@ -210,6 +214,7 @@ pub fn build_rarity_gem(
     gem_image: &Image,
     shader_image: &Image,
     mesh: &Mesh,
+    texture_offset: &Vector2u,
     width: usize,
 ) -> Result<RenderTexture> {
     let vertex_array = create_vertex_array_(
@@ -221,6 +226,7 @@ pub fn build_rarity_gem(
         gem_image.size().y,
         width,
         true,
+        texture_offset,
     )?;
 
     let mut gem_texture = Texture::from_image(&gem_image).ok_or(Error::SFMLError)?;
@@ -256,6 +262,7 @@ pub fn build_rarity_gem(
         shader_image.size().y,
         width,
         true,
+        texture_offset, //&Vector2u { x: 0, y: 0 },
     )?;
     let shader_render_states = RenderStates::new(
         BlendMode::default(),
@@ -266,14 +273,6 @@ pub fn build_rarity_gem(
     canvas.draw_with_renderstates(&shader_vertex_array, shader_render_states);
 
     canvas.display();
-
-    // DEBUG DRAW
-    /*{
-        let result = canvas.texture();
-        let img = result.copy_to_image().ok_or(Error::SFMLError)?;
-        img.save_to_file("/Users/istvanfe/Downloads/gem.png");
-    }*/
-    // END DEBUG
 
     Ok(canvas)
 }
@@ -424,6 +423,7 @@ pub fn create_vertex_array_(
     source_height: u32,
     output_width: usize,
     sort_by_z: bool,
+    texture_offset: &Vector2u,
 ) -> Result<VertexArray> {
     let submesh = mesh.submeshes
         .get(submesh_idx)
@@ -507,8 +507,8 @@ pub fn create_vertex_array_(
                 },
                 Color::rgba(255, 255, 255, 255),
                 Vector2f {
-                    x: vertex.texcoord_x * source_width as f32,
-                    y: vertex.texcoord_y * source_height as f32,
+                    x: (vertex.texcoord_x * source_width as f32) + texture_offset.x as f32,
+                    y: (vertex.texcoord_y * source_height as f32) + texture_offset.y as f32,
                 },
             );
             vertex_array.append(&vertex);

@@ -38,7 +38,7 @@ mod tests {
         println!("Generator initialization took {} seconds.", start.to(end));
 
         let start = PreciseTime::now();
-        let card_image = generator.generate_card(CARD_ID_ICE_BARRIER).unwrap();
+        let _ = generator.generate_card(CARD_ID_ICE_BARRIER).unwrap();
         let end = PreciseTime::now();
         println!("Card image generation took {} seconds.", start.to(end));
 

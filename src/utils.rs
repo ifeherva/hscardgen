@@ -66,3 +66,16 @@ impl<'s> SpriteTransforms for Sprite<'s> {
         ));
     }
 }
+
+pub trait TextureExtensions {
+    fn save_to_file(&self, filepath: &str) -> Result<()>;
+}
+
+impl TextureExtensions for RenderTexture {
+    fn save_to_file(&self, filepath: &str) -> Result<()> {
+        let texture = self.texture();
+        let img = texture.copy_to_image().ok_or(Error::SFMLError)?;
+        img.save_to_file(filepath);
+        Ok(())
+    }
+}

@@ -4,6 +4,7 @@ mod ability;
 use error::{Error, Result};
 use std::collections::HashMap;
 use sfml::graphics::{Color, Image, RenderTexture, Shader, Text, TextStyle, TextureRef};
+use sfml::system::Vector2u;
 use utils::ImageUtils;
 use unitypack::engine::mesh::Mesh;
 use unitypack::engine::texture::IntoTexture2D;
@@ -184,7 +185,6 @@ pub fn build_rarity_gem(
     shader_image = shader_image.resize(gem_image.size().x, gem_image.size().y)?;
 
     // remove and transfer transparency
-    // gem_image.remove_transparency();
     for x in 0..gem_image.size().x {
         for y in 0..gem_image.size().y {
             let mut gem_pixel = gem_image.pixel_at(x, y);
@@ -196,7 +196,26 @@ pub fn build_rarity_gem(
         }
     }
 
-    common::build_rarity_gem(&gem_image, &shader_image, mesh, width)
+    let offset = match rarity {
+        &CardRarity::COMMON => Vector2u { x: 0, y: 0 },
+        &CardRarity::RARE => Vector2u {
+            x: gem_image.size().x / 2,
+            y: 0,
+        },
+        &CardRarity::EPIC => Vector2u {
+            x: 0,
+            y: gem_image.size().y / 2,
+        },
+        &CardRarity::LEGENDARY => Vector2u {
+            x: gem_image.size().x / 2,
+            y: gem_image.size().y / 2,
+        },
+        _ => {
+            return Err(Error::InvalidCardError);
+        }
+    };
+
+    common::build_rarity_gem(&gem_image, &shader_image, mesh, &offset, width)
 }
 
 pub fn build_card_name(
