@@ -184,11 +184,11 @@ impl Generator {
                 )?;
                 let mut portrait_sprite = Sprite::with_texture(&portrait_texture.texture());
                 portrait_sprite
-                    .set_scale(Vector2f::new(528f32 / width as f32, 528f32 / width as f32));
+                    .set_scale(Vector2f::new(530f32 / width as f32, 530f32 / width as f32));
 
                 let portrait_position = Vector2f {
-                    x: 130f32,
-                    y: 175f32,
+                    x: 128f32,
+                    y: 173f32,
                 };
                 portrait_sprite.set_position(portrait_position);
                 canvas.draw(&portrait_sprite);
