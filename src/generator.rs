@@ -220,9 +220,37 @@ impl Generator {
                         Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Priest")?
                             .to_texture2d()?
                     }
+                    CardClass::Hunter => {
+                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Hunter")?
+                            .to_texture2d()?
+                    }
+                    CardClass::Warlock => {
+                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Warlock")?
+                            .to_texture2d()?
+                    }
+                    CardClass::Shaman => {
+                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Shaman")?
+                            .to_texture2d()?
+                    }
+                    CardClass::Druid => {
+                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Druid")?
+                            .to_texture2d()?
+                    }
+                    CardClass::Paladin => {
+                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Paladin")?
+                            .to_texture2d()?
+                    }
+                    CardClass::Rogue => {
+                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Rogue")?
+                            .to_texture2d()?
+                    }
+                    CardClass::Warrior => {
+                        Assets::catalog_get(&self.assets.textures, "Card_Inhand_Ability_Warrior")?
+                            .to_texture2d()?
+                    }
                     _ => {
                         return Err(Error::NotImplementedError(format!(
-                            "Card class {:?} is not yet implemented",
+                            "Card class {:?} for portrait frame is not yet implemented",
                             card_class
                         )));
                     }
