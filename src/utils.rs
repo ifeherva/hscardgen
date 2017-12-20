@@ -2,6 +2,7 @@ use error::{Error, Result};
 use sfml::graphics::{Color, Image, IntRect, RenderTarget, RenderTexture, Sprite, Texture,
                      Transformable};
 use sfml::system::Vector2f;
+use unitypack::engine::texture::Texture2D;
 
 pub trait ImageUtils {
     fn remove_transparency(&mut self);
@@ -77,5 +78,16 @@ impl TextureExtensions for RenderTexture {
         let img = texture.copy_to_image().ok_or(Error::SFMLError)?;
         img.save_to_file(filepath);
         Ok(())
+    }
+}
+
+pub trait IntoImage {
+    fn to_sfml_image(self) -> Result<Image>;
+}
+
+impl IntoImage for Texture2D {
+    fn to_sfml_image(self) -> Result<Image> {
+        Image::create_from_pixels(self.width, self.height, &self.to_image()?)
+            .ok_or(Error::SFMLError)
     }
 }

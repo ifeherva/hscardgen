@@ -8,7 +8,7 @@ use sfml::graphics::{Color, Font, Image, RenderTarget, RenderTexture, Sprite, Te
 use builder;
 use utils::{ImageUtils, SpriteTransforms};
 
-const CARD_ASPECT_RATIO: f32 = 764f32 / 1100f32;
+const CARD_ASPECT_RATIO: f32 = 360f32 / 510f32; //764f32 / 1100f32;
 
 pub struct Generator {
     assets: Assets,
@@ -26,7 +26,7 @@ impl Generator {
     }
 
     pub fn generate_card(&self, card_id: &str) -> Result<Image> {
-        self.generate_card_with_width(card_id, 764)
+        self.generate_card_with_width(card_id, 360)
     }
 
     // This function is supposed to generate cards of arbitary size but not all subfunctions are ready for that yet
@@ -65,7 +65,7 @@ impl Generator {
             card_width,
             (card_width as f32 / CARD_ASPECT_RATIO).ceil() as usize,
         )?;
-
+        /*
         // draw image portrait
         self.draw_card_portrait(card_id, &card_type, &mut canvas)?;
         self.draw_portrait_frame(&card_type, &card_class, &mut canvas)?;
@@ -119,7 +119,7 @@ impl Generator {
 
         // draw card's name
         self.draw_card_name(card_name, &mut belwe_text, &mut canvas, 1.0f32)?;
-
+*/
         // render off screen
         canvas.display();
         Ok(canvas.texture().copy_to_image().ok_or(Error::SFMLError)?)
@@ -140,13 +140,13 @@ impl Generator {
 
         let card_frame = self.assets.get_card_frame(card_type, card_class)?; // 676x957 fixed atm
         let mut frame_sprite = Sprite::with_texture(card_frame.texture());
-        frame_sprite.flip_horizontally();
+        //frame_sprite.flip_horizontally();
 
         // frame sprite accordingly
         let card_frame_real_width = canvas_width as f32 / 1.13;
         let scale_factor = card_frame_real_width / card_frame.size().x as f32;
         frame_sprite.set_scale(Vector2f::new(scale_factor, scale_factor));
-        frame_sprite.set_position(Vector2f::new(53f32 * scale_factor, 113f32 * scale_factor));
+        frame_sprite.set_position(Vector2f::new(25f32 * scale_factor, 53f32 * scale_factor));
 
         canvas.draw(&frame_sprite);
         Ok(canvas)
