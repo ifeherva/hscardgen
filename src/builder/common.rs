@@ -14,8 +14,17 @@ pub fn build_portrait(
     shadow_image: &Image,
     mesh: &Mesh,
 ) -> Result<RenderTexture> {
-    let portrait_vertex_array =
-        create_vertex_array(mesh, 1, 0, portrait_image.size().x, portrait_image.size().y)?;
+    let portrait_vertex_array = create_vertex_array_(
+        mesh,
+        1,
+        0,
+        3,
+        portrait_image.size().x,
+        portrait_image.size().y,
+        284,
+        false,
+        &Vector2u { x: 0, y: 0 },
+    )?;
 
     let mut portrait_texture = Texture::from_image(&portrait_image).ok_or(Error::SFMLError)?;
     portrait_texture.set_smooth(true);
@@ -25,35 +34,45 @@ pub fn build_portrait(
     // create canvas
     let portrait_bounds = portrait_vertex_array.bounds();
     let mut canvas = RenderTexture::new(
-        (portrait_bounds.width + 1f32) as u32,
-        (portrait_bounds.height + 1f32) as u32,
+        portrait_bounds.width.ceil() as u32,
+        portrait_bounds.height.ceil() as u32,
         false,
     ).ok_or(Error::SFMLError)?;
     canvas.set_smooth(true);
     canvas.clear(&TRANSPARENT_COLOR);
 
+    let mut flip_transform = Transform::default();
+    flip_transform.scale_with_center(
+        -1f32,
+        1f32,
+        portrait_bounds.width / 2f32,
+        portrait_bounds.height / 2f32,
+    );
+
     let render_states = RenderStates::new(
         BlendMode::default(),
-        Transform::default(),
+        flip_transform,
         Some(&portrait_texture),
         None,
     );
     canvas.draw_with_renderstates(&portrait_vertex_array, render_states);
 
     // render shadow
-    let shadow_vertex_array =
-        create_vertex_array(mesh, 1, 1, shadow_image.size().x, shadow_image.size().y)?;
-    let shadow_bounds = shadow_vertex_array.bounds();
-
-    let mut shadow_transform = Transform::default();
-    shadow_transform.scale(
-        canvas.size().x as f32 / shadow_bounds.width as f32,
-        canvas.size().y as f32 / shadow_bounds.height as f32,
-    );
+    let shadow_vertex_array = create_vertex_array_(
+        mesh,
+        1,
+        0,
+        4,
+        shadow_image.size().x,
+        shadow_image.size().y,
+        284,
+        false,
+        &Vector2u { x: 0, y: 0 },
+    )?;
 
     let render_states = RenderStates::new(
         BlendMode::MULTIPLY,
-        shadow_transform,
+        flip_transform,
         Some(&shadow_texture),
         None,
     );

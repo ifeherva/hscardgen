@@ -55,20 +55,33 @@ impl Generator {
 
         let card_class = card.card_class.as_ref().ok_or(Error::InvalidCardError)?;
 
-        //let rarity = card.rarity.as_ref().ok_or(Error::InvalidCardError)?;
-        //let card_size = Vector2 { x: 764, y: 1100 };
+        let card_height = (card_width as f32 / CARD_ASPECT_RATIO).ceil() as usize;
 
-        // Generate card frame
-        let mut canvas = self.generate_card_frame(
-            &card_type,
-            &card_class,
-            card_width,
-            (card_width as f32 / CARD_ASPECT_RATIO).ceil() as usize,
-        )?;
-        /*
+        // Create transparent canvas
+        let mut canvas = RenderTexture::new(
+            (card_width as f32 * 1.13) as u32,
+            (card_height as f32 * 1.13) as u32,
+            false,
+        ).ok_or(Error::SFMLError)?;
+        canvas.clear(&builder::TRANSPARENT_COLOR);
+        canvas.set_smooth(true);
+
+        // get card frame
+        let card_frame = self.assets.get_card_frame(card_type, card_class)?;
+        let mut frame_sprite = Sprite::with_texture(card_frame.texture());
+
+        // frame sprite accordingly
+        let scale_factor = card_width as f32 / card_frame.size().x as f32;
+        let card_frame_origin = Vector2f::new(28.25f32 * scale_factor, 60f32 * scale_factor);
+        frame_sprite.set_scale(Vector2f::new(scale_factor, scale_factor));
+        frame_sprite.set_position(Vector2f::new(card_frame_origin.x, card_frame_origin.y));
+
+        // draw card frame
+        canvas.draw(&frame_sprite);
+
         // draw image portrait
-        self.draw_card_portrait(card_id, &card_type, &mut canvas)?;
-        self.draw_portrait_frame(&card_type, &card_class, &mut canvas)?;
+        self.draw_card_portrait(card_id, &card_type, &card_frame_origin, &mut canvas)?;
+        /*self.draw_portrait_frame(&card_type, &card_class, &mut canvas)?;
 
         // draw rarity gem
         match card.rarity {
@@ -125,37 +138,11 @@ impl Generator {
         Ok(canvas.texture().copy_to_image().ok_or(Error::SFMLError)?)
     }
 
-    fn generate_card_frame(
-        &self,
-        card_type: &CardType,
-        card_class: &CardClass,
-        canvas_width: usize, // final canvas width, this is larger than the actual card size
-        canvas_height: usize,
-    ) -> Result<(RenderTexture)> {
-        // Create transparent canvas
-        let mut canvas = RenderTexture::new(canvas_width as u32, canvas_height as u32, false)
-            .ok_or(Error::SFMLError)?;
-        canvas.clear(&builder::TRANSPARENT_COLOR);
-        canvas.set_smooth(true);
-
-        let card_frame = self.assets.get_card_frame(card_type, card_class)?; // 676x957 fixed atm
-        let mut frame_sprite = Sprite::with_texture(card_frame.texture());
-        //frame_sprite.flip_horizontally();
-
-        // frame sprite accordingly
-        let card_frame_real_width = canvas_width as f32 / 1.13;
-        let scale_factor = card_frame_real_width / card_frame.size().x as f32;
-        frame_sprite.set_scale(Vector2f::new(scale_factor, scale_factor));
-        frame_sprite.set_position(Vector2f::new(25f32 * scale_factor, 53f32 * scale_factor));
-
-        canvas.draw(&frame_sprite);
-        Ok(canvas)
-    }
-
     fn draw_card_portrait(
         &self,
         card_id: &str,
         card_type: &CardType,
+        frame_origin: &Vector2f,
         canvas: &mut RenderTexture,
     ) -> Result<()> {
         let portrait = self.assets.get_card_portrait(card_id)?;
@@ -164,7 +151,6 @@ impl Generator {
         let mut portrait_img = Image::create_from_pixels(width, height, &portrait.to_image()?)
             .ok_or(Error::SFMLError)?;
 
-        portrait_img.flip_vertically();
         portrait_img.remove_transparency();
 
         match *card_type {
@@ -176,12 +162,10 @@ impl Generator {
                     &self.assets.meshes,
                 )?;
                 let mut portrait_sprite = Sprite::with_texture(&portrait_texture.texture());
-                portrait_sprite
-                    .set_scale(Vector2f::new(530f32 / width as f32, 530f32 / width as f32));
 
                 let portrait_position = Vector2f {
-                    x: 128f32,
-                    y: 173f32,
+                    x: 36f32 + frame_origin.x,
+                    y: 32f32 + frame_origin.y,
                 };
                 portrait_sprite.set_position(portrait_position);
                 canvas.draw(&portrait_sprite);
