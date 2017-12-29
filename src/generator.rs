@@ -66,7 +66,7 @@ impl Generator {
         canvas.clear(&builder::TRANSPARENT_COLOR);
         canvas.set_smooth(true);
 
-        // get card frame
+        // get card frame, TODO: do not add text background, it should come separate with expansion logo
         let card_frame = self.assets.get_card_frame(card_type, card_class)?;
         let mut frame_sprite = Sprite::with_texture(card_frame.texture());
 
@@ -79,9 +79,9 @@ impl Generator {
         // draw card frame
         canvas.draw(&frame_sprite);
 
-        // draw image portrait
+        // draw image portrait, TODO: these should be scale-dependent
         self.draw_card_portrait(card_id, &card_type, &card_frame_origin, &mut canvas)?;
-        /*self.draw_portrait_frame(&card_type, &card_class, &mut canvas)?;
+        self.draw_portrait_frame(&card_type, &card_class, &card_frame_origin, &mut canvas)?;
 
         // draw rarity gem
         match card.rarity {
@@ -89,7 +89,7 @@ impl Generator {
                 match rarity {
                     &CardRarity::FREE => {}
                     _ => {
-                        self.draw_rarity_gem(rarity, &mut canvas, 1.0f32)?;
+                        self.draw_rarity_gem(rarity, &card_frame_origin, &mut canvas)?;
                     }
                 };
             }
@@ -97,11 +97,11 @@ impl Generator {
         };
 
         // draw name banner
-        self.draw_name_banner(&card_type, &mut canvas, 1.0f32)?;
+        self.draw_name_banner(&card_type, &card_frame_origin, &mut canvas)?;
 
         // draw mana gem
-        self.draw_mana_gem(&mut canvas, 1.0f32)?;
-
+        self.draw_mana_gem(&card_frame_origin, &mut canvas)?;
+        /*
         let belwe_raw = self.assets.get_font(&Fonts::Belwe)?;
         let belwe = Font::from_memory(&belwe_raw.data).ok_or(Error::SFMLError)?;
 
@@ -184,6 +184,7 @@ impl Generator {
         &self,
         card_type: &CardType,
         card_class: &CardClass,
+        frame_origin: &Vector2f,
         canvas: &mut RenderTexture,
     ) -> Result<()> {
         match *card_type {
@@ -241,14 +242,11 @@ impl Generator {
                     builder::build_ability_portrait_frame(&card_frame_image, &self.assets.meshes)?;
                 let mut portrait_frame_sprite =
                     Sprite::with_texture(&portrait_frame_texture.texture());
-                portrait_frame_sprite.flip_horizontally();
+                portrait_frame_sprite.flip_vertically();
 
-                let aspect_factor = card_frame_image.size().x as f32 / 1024f32;
-
-                portrait_frame_sprite.set_scale(Vector2f::new(aspect_factor, aspect_factor));
                 let portrait_frame_sprite_position = Vector2f {
-                    x: 99f32 * aspect_factor,
-                    y: 145f32 * aspect_factor,
+                    x: 25f32 + frame_origin.x,
+                    y: 20f32 + frame_origin.y,
                 };
                 portrait_frame_sprite.set_position(portrait_frame_sprite_position);
                 canvas.draw(&portrait_frame_sprite);
@@ -266,21 +264,21 @@ impl Generator {
     fn draw_name_banner(
         &self,
         card_type: &CardType,
+        frame_origin: &Vector2f,
         canvas: &mut RenderTexture,
-        scaling_factor: f32,
     ) -> Result<()> {
         match *card_type {
             CardType::Spell => {
                 let banner_texture = builder::build_ability_name_banner(
                     &self.assets.textures,
                     &self.assets.meshes,
-                    (643f32 * scaling_factor).ceil() as usize,
+                    346,
                 )?;
                 let mut banner_sprite = Sprite::with_texture(&banner_texture.texture());
-
+                banner_sprite.flip_vertically();
                 banner_sprite.set_position(Vector2f {
-                    x: 65f32 * scaling_factor,
-                    y: 530f32 * scaling_factor,
+                    x: 6f32 + frame_origin.x,
+                    y: 221f32 + frame_origin.y,
                 });
                 canvas.draw(&banner_sprite);
             }
@@ -294,17 +292,13 @@ impl Generator {
         Ok(())
     }
 
-    fn draw_mana_gem(&self, canvas: &mut RenderTexture, scaling_factor: f32) -> Result<()> {
-        let mana_gem = builder::build_mana_gem(
-            &self.assets.textures,
-            &self.assets.meshes,
-            (173f32 * scaling_factor).ceil() as usize,
-        )?;
+    fn draw_mana_gem(&self, frame_origin: &Vector2f, canvas: &mut RenderTexture) -> Result<()> {
+        let mana_gem = builder::build_mana_gem(&self.assets.textures, &self.assets.meshes, 94)?;
         let mut mana_gem_sprite = Sprite::with_texture(&mana_gem.texture());
         mana_gem_sprite.flip_horizontally();
-        mana_gem_sprite.move_(Vector2f {
-            x: 24f32 * scaling_factor,
-            y: 75f32 * scaling_factor,
+        mana_gem_sprite.set_position(Vector2f {
+            x: frame_origin.x - 13f32,
+            y: frame_origin.y - 20f32,
         });
         canvas.draw(&mana_gem_sprite);
         Ok(())
@@ -313,35 +307,28 @@ impl Generator {
     fn draw_rarity_gem(
         &self,
         rarity: &CardRarity,
+        frame_origin: &Vector2f,
         canvas: &mut RenderTexture,
-        scaling_factor: f32,
     ) -> Result<()> {
         // draw socket
-        let rarity_gem_socket = builder::build_rarity_gem_socket(
-            &self.assets.textures,
-            &self.assets.meshes,
-            (137f32 * scaling_factor).ceil() as usize,
-        )?;
+        let rarity_gem_socket =
+            builder::build_rarity_gem_socket(&self.assets.textures, &self.assets.meshes, 66)?;
         let mut rarity_gem_socket_sprite = Sprite::with_texture(&rarity_gem_socket.texture());
         rarity_gem_socket_sprite.flip_vertically();
         rarity_gem_socket_sprite.set_position(Vector2f {
-            x: 319f32 * scaling_factor,
-            y: 635f32 * scaling_factor,
+            x: 143f32 + frame_origin.x,
+            y: 279f32 + frame_origin.y,
         });
         canvas.draw(&rarity_gem_socket_sprite);
 
         // draw gem
-        let rarity_gem = builder::build_rarity_gem(
-            &self.assets.textures,
-            &self.assets.meshes,
-            rarity,
-            (61f32 * scaling_factor).ceil() as usize,
-        )?;
+        let rarity_gem =
+            builder::build_rarity_gem(&self.assets.textures, &self.assets.meshes, rarity, 29)?;
         let mut rarity_gem_sprite = Sprite::with_texture(&rarity_gem.texture());
         rarity_gem_sprite.flip_vertically();
         rarity_gem_sprite.set_position(Vector2f {
-            x: 360f32 * scaling_factor,
-            y: 658f32 * scaling_factor,
+            x: 163f32 + frame_origin.x,
+            y: 291f32 + frame_origin.y,
         });
         canvas.draw(&rarity_gem_sprite);
         Ok(())

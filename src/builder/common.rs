@@ -86,15 +86,24 @@ pub fn build_portrait(
 }
 
 pub fn build_portrait_frame(frame_image: &Image, mesh: &Mesh) -> Result<RenderTexture> {
-    let frame_vertex_array =
-        create_vertex_array(mesh, 0, 0, frame_image.size().x, frame_image.size().y)?;
+    let frame_vertex_array = create_vertex_array_(
+        mesh,
+        0,
+        0,
+        3,
+        frame_image.size().x,
+        frame_image.size().y,
+        307,
+        false,
+        &Vector2u { x: 0, y: 0 },
+    )?;
     let mut frame_image_texture = Texture::from_image(&frame_image).ok_or(Error::SFMLError)?;
     frame_image_texture.set_smooth(true);
 
     let bounds = frame_vertex_array.bounds();
     let mut canvas = RenderTexture::new(
-        (bounds.width + 1f32) as u32,
-        (bounds.height + 1f32) as u32,
+        bounds.width.ceil() as u32,
+        bounds.height.ceil() as u32,
         false,
     ).ok_or(Error::SFMLError)?;
     canvas.set_smooth(true);

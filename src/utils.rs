@@ -47,6 +47,7 @@ pub trait SpriteTransforms {
     fn flip_vertically(&mut self);
 }
 
+// TODO: replace with proper transforms in render stage
 impl<'s> SpriteTransforms for Sprite<'s> {
     fn flip_horizontally(&mut self) {
         let texture_rect = self.texture_rect();
