@@ -20,6 +20,7 @@ pub struct Card {
     #[serde(default)] pub collectible: bool,
     pub cost: Option<i32>,
     #[serde(rename = "type")] pub card_type: Option<CardType>,
+    #[serde(rename = "hideStats")] pub hide_stats: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]

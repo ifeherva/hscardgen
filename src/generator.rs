@@ -101,35 +101,49 @@ impl Generator {
 
         // draw mana gem
         self.draw_mana_gem(&card_frame_origin, &mut canvas)?;
-        /*
+
         let belwe_raw = self.assets.get_font(&Fonts::Belwe)?;
         let belwe = Font::from_memory(&belwe_raw.data).ok_or(Error::SFMLError)?;
 
-        let mut belwe_text = Text::new("", &belwe, 160);
+        let mut belwe_text = Text::new("", &belwe, 87);
         belwe_text.set_style(TextStyle::BOLD);
         belwe_text.set_outline_color(&Color::BLACK);
-        belwe_text.set_outline_thickness(4f32);
+        belwe_text.set_outline_thickness(3f32);
         belwe_text.scale(Vector2f::new(
             1f32 + belwe_raw.pixel_scale,
             1f32 + belwe_raw.pixel_scale,
         ));
 
+        let mut mana_cost: i32 = -1;
+
         // draw mana cost
         match card.cost {
             Some(cost) => {
-                let center = Vector2f::new(112f32, 161f32);
-
-                belwe_text.set_string(&cost.to_string());
-                let bounds = belwe_text.global_bounds();
-                belwe_text.set_position(Vector2f::new(
-                    center.x - (bounds.width / 2f32) - bounds.left,
-                    center.y - (bounds.height / 2f32) - bounds.top,
-                ));
-                canvas.draw(&belwe_text);
+                match card.hide_stats {
+                    Some(hide_stats) => {
+                        if !hide_stats {
+                            mana_cost = cost;
+                        } else {
+                            mana_cost = -1;
+                        }
+                    }
+                    None => {
+                        mana_cost = cost;
+                    }
+                };
             }
             None => {}
         };
-
+        if mana_cost >= 0 {
+            belwe_text.set_string(&mana_cost.to_string());
+            let bounds = belwe_text.global_bounds();
+            belwe_text.set_position(Vector2f::new(
+                card_frame_origin.x - (bounds.width / 2f32) - bounds.left + 31.5f32,
+                card_frame_origin.y - (bounds.height / 2f32) - bounds.top + 23f32,
+            ));
+            canvas.draw(&belwe_text);
+        }
+        /*
         // draw card's name
         self.draw_card_name(card_name, &mut belwe_text, &mut canvas, 1.0f32)?;
 */
