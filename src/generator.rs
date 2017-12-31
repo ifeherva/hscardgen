@@ -143,10 +143,10 @@ impl Generator {
             ));
             canvas.draw(&belwe_text);
         }
-        /*
+
         // draw card's name
-        self.draw_card_name(card_name, &mut belwe_text, &mut canvas, 1.0f32)?;
-*/
+        self.draw_card_name(card_name, &mut belwe_text, &card_frame_origin, &mut canvas)?;
+
         // render off screen
         canvas.display();
         Ok(canvas.texture().copy_to_image().ok_or(Error::SFMLError)?)
@@ -352,21 +352,17 @@ impl Generator {
         &self,
         card_name: &str,
         text: &mut Text,
+        frame_origin: &Vector2f,
         canvas: &mut RenderTexture,
-        scaling_factor: f32,
     ) -> Result<()> {
         let name_texture = builder::build_name_texture(card_name, text)?;
 
-        let card_name = builder::build_card_name(
-            name_texture.texture(),
-            &self.assets.meshes,
-            (573f32 * scaling_factor).ceil() as usize,
-        )?;
+        let card_name = builder::build_card_name(name_texture.texture(), &self.assets.meshes, 318)?;
         let mut card_name_sprite = Sprite::with_texture(&card_name.texture());
         card_name_sprite.flip_vertically();
         card_name_sprite.set_position(Vector2f {
-            x: 105f32 * scaling_factor,
-            y: 540f32 * scaling_factor,
+            x: 20f32 + frame_origin.x,
+            y: 226f32 + frame_origin.y,
         });
         canvas.draw(&card_name_sprite);
         Ok(())

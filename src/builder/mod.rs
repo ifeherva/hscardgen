@@ -235,7 +235,7 @@ pub fn build_card_name(
 pub fn build_name_texture(card_name: &str, text: &mut Text) -> Result<RenderTexture> {
     text.set_string(card_name);
     text.set_style(TextStyle::REGULAR);
-    text.set_character_size(28);
+    text.set_character_size(30);
     text.set_outline_thickness(2f32);
     common::build_name_texture(text)
 }

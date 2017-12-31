@@ -290,7 +290,7 @@ pub fn build_rarity_gem(
         shader_image.size().y,
         width,
         true,
-        texture_offset, //&Vector2u { x: 0, y: 0 },
+        texture_offset,
     )?;
     let shader_render_states = RenderStates::new(
         BlendMode::default(),
@@ -307,13 +307,11 @@ pub fn build_rarity_gem(
 
 pub fn build_name_texture(text: &mut Text) -> Result<RenderTexture> {
     let center = Vector2f::new(150f32, 22f32);
-    let bounds = text.global_bounds();
+    let bounds = text.local_bounds();
 
-    text.set_position(Vector2f::new(
-        center.x - (bounds.width / 2f32),
-        (bounds.top + bounds.height) / 2.0 + 2f32,
-    ));
+    text.set_position(Vector2f::new(center.x - (bounds.width / 2f32), 41f32));
     text.set_scale(Vector2f { x: 1f32, y: -1f32 });
+
     let mut canvas = RenderTexture::new(300, 44, false).ok_or(Error::SFMLError)?;
     canvas.set_smooth(true);
     canvas.clear(&TRANSPARENT_COLOR);
@@ -541,69 +539,6 @@ pub fn create_vertex_array_(
             );
             vertex_array.append(&vertex);
         }
-    }
-
-    Ok(vertex_array)
-}
-
-pub fn create_vertex_array(
-    mesh: &Mesh,
-    submesh_idx: usize,
-    texcoord_idx: usize,
-    source_width: u32,
-    source_height: u32,
-) -> Result<VertexArray> {
-    // process vertices
-    let mut raw_vertices = Vec::new();
-
-    let submesh = mesh.submeshes
-        .get(submesh_idx)
-        .ok_or(Error::AssetNotFoundError(format!(
-            "Submesh {} not found",
-            submesh_idx
-        )))?;
-
-    let vertex_data_size = mesh.vertex_data.data.len() / mesh.vertex_data.vertex_count as usize;
-    let mut texcoord_offset = 24;
-    if texcoord_idx == 1 {
-        texcoord_offset = 32;
-    }
-    let data_offset = submesh.first_byte as usize;
-    for i in 0..submesh.index_count as usize {
-        // get current vertex index
-        let mut reader =
-            BufReader::new(&mesh.index_buffer[(i * 2) + data_offset..((i * 2) + 2) + data_offset]);
-        let vertex_idx: u16 = ReadBytesExt::read_u16::<LittleEndian>(&mut reader)?;
-
-        // only read the last two 4-byte fields
-        let data_idx = (vertex_data_size * vertex_idx as usize) + texcoord_offset;
-        let fields = &mesh.vertex_data.data[data_idx..data_idx + 8];
-        reader = BufReader::new(fields);
-        let texcoord1_x: f32 = ReadBytesExt::read_f32::<LittleEndian>(&mut reader)?;
-        let texcoord1_y: f32 = ReadBytesExt::read_f32::<LittleEndian>(&mut reader)?;
-        raw_vertices.push((texcoord1_x, texcoord1_y));
-    }
-
-    let (min_x, min_y): (f32, f32) = raw_vertices
-        .iter()
-        .fold((1f32, 1f32), |min: (f32, f32), val| {
-            (min.0.min(val.0), min.1.min(val.1))
-        });
-
-    let mut vertex_array = VertexArray::new(PrimitiveType::Triangles, raw_vertices.len());
-
-    for raw_vertex in raw_vertices {
-        let x = (raw_vertex.0 - min_x) * source_width as f32;
-        let y = (raw_vertex.1 - min_y) * source_height as f32;
-        let vertex = Vertex::new(
-            Vector2f { x: x, y: y },
-            Color::rgba(255, 255, 255, 255),
-            Vector2f {
-                x: raw_vertex.0 * source_width as f32,
-                y: raw_vertex.1 * source_height as f32,
-            },
-        );
-        vertex_array.append(&vertex);
     }
 
     Ok(vertex_array)
