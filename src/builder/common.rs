@@ -14,7 +14,7 @@ pub fn build_portrait(
     shadow_image: &Image,
     mesh: &Mesh,
 ) -> Result<RenderTexture> {
-    let portrait_vertex_array = create_vertex_array_(
+    let portrait_vertex_array = create_vertex_array(
         mesh,
         1,
         0,
@@ -58,7 +58,7 @@ pub fn build_portrait(
     canvas.draw_with_renderstates(&portrait_vertex_array, render_states);
 
     // render shadow
-    let shadow_vertex_array = create_vertex_array_(
+    let shadow_vertex_array = create_vertex_array(
         mesh,
         1,
         0,
@@ -86,7 +86,7 @@ pub fn build_portrait(
 }
 
 pub fn build_portrait_frame(frame_image: &Image, mesh: &Mesh) -> Result<RenderTexture> {
-    let frame_vertex_array = create_vertex_array_(
+    let frame_vertex_array = create_vertex_array(
         mesh,
         0,
         0,
@@ -125,7 +125,7 @@ pub fn build_ability_name_banner(
     mesh: &Mesh,
     width: usize,
 ) -> Result<RenderTexture> {
-    let frame_vertex_array = create_vertex_array_(
+    let frame_vertex_array = create_vertex_array(
         mesh,
         0,
         0,
@@ -161,7 +161,7 @@ pub fn build_ability_name_banner(
 }
 
 pub fn build_mana_gem(mana_gem_image: &Image, mesh: &Mesh, width: usize) -> Result<RenderTexture> {
-    let vertex_array = create_vertex_array_(
+    let vertex_array = create_vertex_array(
         mesh,
         0,
         0,
@@ -202,7 +202,7 @@ pub fn build_rarity_socket(
     mesh: &Mesh,
     width: usize,
 ) -> Result<RenderTexture> {
-    let vertex_array = create_vertex_array_(
+    let vertex_array = create_vertex_array(
         mesh,
         0,
         0,
@@ -245,7 +245,7 @@ pub fn build_rarity_gem(
     texture_offset: &Vector2u,
     width: usize,
 ) -> Result<RenderTexture> {
-    let vertex_array = create_vertex_array_(
+    let vertex_array = create_vertex_array(
         mesh,
         0,
         0,
@@ -281,7 +281,7 @@ pub fn build_rarity_gem(
     let mut shader_texture = Texture::from_image(&shader_image).ok_or(Error::SFMLError)?;
     shader_texture.set_smooth(true);
 
-    let shader_vertex_array = create_vertex_array_(
+    let shader_vertex_array = create_vertex_array(
         mesh,
         0,
         0,
@@ -440,7 +440,7 @@ fn read_triangle(
     Ok(Triangle::new(vertex_1, vertex_2, vertex_3))
 }
 
-pub fn create_vertex_array_(
+pub fn create_vertex_array(
     mesh: &Mesh,
     submesh_idx: usize,
     coord_channel_idx: usize,

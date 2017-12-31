@@ -7,7 +7,7 @@ use cards::CardClass;
 use error::{Error, Result};
 use unitypack::engine::mesh::Mesh;
 use assets::Assets;
-use builder::common::create_vertex_array_;
+use builder::common::create_vertex_array;
 use builder::TRANSPARENT_COLOR;
 use utils::IntoImage;
 
@@ -105,7 +105,7 @@ fn build_card_ability_frame(
         Error::AssetNotFoundError(format!("Cannot find InHand_Ability_Description_mesh")),
     )?;
 
-    let frame_vertex_array = create_vertex_array_(
+    let frame_vertex_array = create_vertex_array(
         frame_mesh,
         0,
         0,
@@ -117,7 +117,7 @@ fn build_card_ability_frame(
         &Vector2u { x: 0, y: 0 },
     )?;
 
-    let description_frame_vertex_array = create_vertex_array_(
+    let description_frame_vertex_array = create_vertex_array(
         textbox_mesh,
         1,
         0,
@@ -129,7 +129,7 @@ fn build_card_ability_frame(
         &Vector2u { x: 0, y: 0 },
     )?;
 
-    let textbox_vertex_array = create_vertex_array_(
+    let textbox_vertex_array = create_vertex_array(
         textbox_mesh,
         0,
         0,
@@ -219,7 +219,7 @@ pub fn build_card_name(
     let source_width = name_texture.size().x;
     let source_height = name_texture.size().y;
 
-    let vertex_array = create_vertex_array_(
+    let vertex_array = create_vertex_array(
         mesh,
         0,
         0,
